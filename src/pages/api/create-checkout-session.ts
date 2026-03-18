@@ -1,24 +1,55 @@
 import type { APIRoute } from "astro";
 import Stripe from "stripe";
 import {
+  formatAmountNzd,
   getNextJulyAnchorEpoch,
+  getPlanDisplayName,
   getPriceForPlan,
+  getProratedAmountToJulyAnchor,
   getSiteBaseUrl,
-  getUpfrontPriceForPlan,
   isPromoWindowNz,
+  promoCodeMatches,
   type MembershipPlan,
 } from "../../lib/stripe-checkout";
 
 type CreateSessionPayload = {
   plan?: MembershipPlan;
   email?: string;
-  customerId?: string;
+  promoCode?: string;
+};
+
+type ExistingCustomerInfo = {
+  id?: string;
+  hasPriorSubscriptions: boolean;
 };
 
 const VALID_PLANS: MembershipPlan[] = ["associate", "professional"];
 
 function badRequest(message: string): Response {
   return Response.json({ error: message }, { status: 400 });
+}
+
+async function getExistingCustomerInfo(
+  stripe: Stripe,
+  email: string,
+): Promise<ExistingCustomerInfo> {
+  const customers = await stripe.customers.list({ email, limit: 1 });
+  const customerId = customers.data[0]?.id;
+
+  if (!customerId) {
+    return { hasPriorSubscriptions: false };
+  }
+
+  const subs = await stripe.subscriptions.list({
+    customer: customerId,
+    status: "all",
+    limit: 1,
+  });
+
+  return {
+    id: customerId,
+    hasPriorSubscriptions: subs.data.length > 0,
+  };
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -35,11 +66,9 @@ export const POST: APIRoute = async ({ request }) => {
     return badRequest("Invalid plan. Use 'associate' or 'professional'.");
   }
 
-  const customerId = payload.customerId?.trim();
-  const email = payload.email?.trim();
-
-  if (!customerId && !email) {
-    return badRequest("Provide email or customerId.");
+  const email = payload.email?.trim().toLowerCase();
+  if (!email) {
+    return badRequest("Provide an email.");
   }
 
   const secretKey = import.meta.env.STRIPE_SECRET_KEY?.trim();
@@ -51,62 +80,81 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const stripe = new Stripe(secretKey);
+  const recurringPriceId = getPriceForPlan(plan);
   const billingCycleAnchor = getNextJulyAnchorEpoch();
   const siteBaseUrl = getSiteBaseUrl(request.url);
-  const selectedPrice = getPriceForPlan(plan);
-  const upfrontPrice = getUpfrontPriceForPlan(plan);
-  const promotionCodeId = import.meta.env.STRIPE_PROMO_CODE_ID?.trim();
-  const inPromoWindow = isPromoWindowNz();
-  const applyPromoAutomatically = inPromoWindow && Boolean(promotionCodeId);
 
-  const params: Stripe.Checkout.SessionCreateParams = {
-    mode: "subscription",
-    success_url: `${siteBaseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${siteBaseUrl}/cancel`,
-    metadata: {
-      plan,
-    },
-  };
-
-  if (customerId) {
-    params.customer = customerId;
-  } else if (email) {
-    params.customer_email = email;
+  const recurringPrice = await stripe.prices.retrieve(recurringPriceId);
+  if (recurringPrice.currency !== "nzd" || !recurringPrice.unit_amount) {
+    return Response.json(
+      { error: "Recurring price must be a fixed NZD amount." },
+      { status: 500 },
+    );
   }
 
-  if (inPromoWindow) {
-    if (!promotionCodeId) {
-      return Response.json(
-        { error: "Server missing STRIPE_PROMO_CODE_ID for Jan-Jun checkout." },
-        { status: 500 },
-      );
-    }
+  const annualAmount = recurringPrice.unit_amount;
+  const customerInfo = await getExistingCustomerInfo(stripe, email);
+  const inPromoWindow = isPromoWindowNz();
+  const promoApplied =
+    inPromoWindow &&
+    promoCodeMatches(payload.promoCode) &&
+    !customerInfo.hasPriorSubscriptions;
 
-    if (!upfrontPrice) {
-      return Response.json(
-        {
-          error:
-            "Server missing STRIPE_UPFRONT_PRICE_* for fixed first-term pricing.",
+  const dueTodayAmount = promoApplied
+    ? Math.round(annualAmount * 0.5)
+    : getProratedAmountToJulyAnchor(annualAmount);
+
+  const planDisplayName = getPlanDisplayName(plan);
+  const renewalMessage = `Then ${formatAmountNzd(annualAmount)} per year starting 1 July.`;
+
+  const params: Stripe.Checkout.SessionCreateParams = {
+    mode: "payment",
+    success_url: `${siteBaseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${siteBaseUrl}/cancel`,
+    payment_intent_data: {
+      setup_future_usage: "off_session",
+      metadata: {
+        flow: "option_c",
+        plan,
+        recurring_price_id: recurringPriceId,
+        billing_anchor_epoch: String(billingCycleAnchor),
+      },
+    },
+    metadata: {
+      flow: "option_c",
+      plan,
+      recurring_price_id: recurringPriceId,
+      billing_anchor_epoch: String(billingCycleAnchor),
+      annual_amount: String(annualAmount),
+      due_today_amount: String(dueTodayAmount),
+      promo_applied: promoApplied ? "true" : "false",
+      renewal_message: renewalMessage,
+    },
+    custom_text: {
+      submit: {
+        message: renewalMessage,
+      },
+    },
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: "nzd",
+          unit_amount: dueTodayAmount,
+          product_data: {
+            name: `${planDisplayName} (first term payment)`,
+            description: renewalMessage,
+          },
         },
-        { status: 500 },
-      );
-    }
+      },
+    ],
+  };
 
-    params.line_items = [
-      { price: selectedPrice, quantity: 1 },
-      { price: upfrontPrice, quantity: 1 },
-    ];
-    params.subscription_data = {
-      trial_end: billingCycleAnchor,
-    };
-    params.discounts = [{ promotion_code: promotionCodeId }];
+  if (customerInfo.id) {
+    params.customer = customerInfo.id;
   } else {
-    params.line_items = [{ price: selectedPrice, quantity: 1 }];
-    params.subscription_data = {
-      billing_cycle_anchor: billingCycleAnchor,
-      proration_behavior: "create_prorations",
-    };
-    params.allow_promotion_codes = true;
+    params.customer_creation = "always";
+    params.customer_email = email;
   }
 
   try {
@@ -115,9 +163,12 @@ export const POST: APIRoute = async ({ request }) => {
     return Response.json({
       id: session.id,
       url: session.url,
-      billingCycleAnchor,
-      promoAppliedAutomatically: applyPromoAutomatically,
       plan,
+      dueTodayAmount,
+      annualAmount,
+      billingCycleAnchor,
+      promoApplied,
+      renewalMessage,
     });
   } catch (error) {
     const message =
