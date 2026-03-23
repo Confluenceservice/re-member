@@ -73,7 +73,7 @@ export const POST: APIRoute = async ({ request }) => {
     return badRequest("Provide an email.");
   }
 
-  const secretKey = import.meta.env.STRIPE_SECRET_KEY?.trim();
+  const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
   if (!secretKey) {
     return Response.json(
       { error: "Server is missing STRIPE_SECRET_KEY." },

@@ -177,8 +177,8 @@ async function handleSubscriptionDeleted(
 
 export const POST: APIRoute = async ({ request }) => {
   const signature = request.headers.get("stripe-signature");
-  const webhookSecret = import.meta.env.STRIPE_WEBHOOK_SECRET?.trim();
-  const secretKey = import.meta.env.STRIPE_SECRET_KEY?.trim();
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+  const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
 
   if (!signature || !webhookSecret || !secretKey) {
     return new Response("Missing webhook config.", { status: 400 });

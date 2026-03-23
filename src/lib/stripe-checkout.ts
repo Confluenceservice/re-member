@@ -31,15 +31,15 @@ export function getNextJulyAnchorEpoch(now: DateTime = DateTime.utc()): number {
 }
 
 export function getSiteBaseUrl(requestUrl: string): string {
-  const configured = import.meta.env.PUBLIC_SITE_URL?.trim();
+  const configured = process.env.PUBLIC_SITE_URL?.trim();
   if (configured) return configured.replace(/\/$/, "");
   return new URL(requestUrl).origin;
 }
 
 export function getPriceForPlan(plan: MembershipPlan): string {
   const map: Record<MembershipPlan, string> = {
-    associate: import.meta.env.STRIPE_PRICE_ASSOCIATE,
-    professional: import.meta.env.STRIPE_PRICE_PROFESSIONAL,
+    associate: process.env.STRIPE_PRICE_ASSOCIATE,
+    professional: process.env.STRIPE_PRICE_PROFESSIONAL,
   };
 
   return map[plan];
