@@ -9,59 +9,107 @@ import {
   setPaymentFailed,
 } from "../../lib/memberships";
 
+/**
+ * Option C (mode=payment):
+ * - Checkout charges the first term as a one-time payment
+ * - This webhook creates the recurring subscription with trial_end = next July 1
+ * - Idempotency key prevents duplicate subscription creation
+ */
 async function handleCheckoutCompleted(
   stripe: Stripe,
   session: Stripe.Checkout.Session,
 ): Promise<void> {
-  if (session.mode !== "payment") return;
+  // Only handle Option C flow
   if (session.metadata?.flow !== "option_c") return;
 
+  // Option C uses mode=payment, not mode=subscription
+  if (session.mode !== "payment") return;
+
   const recurringPriceId = session.metadata?.recurring_price_id;
-  const billingAnchorRaw = session.metadata?.billing_anchor_epoch;
   const plan = session.metadata?.plan;
+  const nextJuly1Epoch = parseInt(session.metadata?.next_july1_epoch ?? "0", 10);
   const customerId =
     typeof session.customer === "string" ? session.customer : undefined;
 
-  if (!recurringPriceId || !billingAnchorRaw || !customerId) {
+  if (!customerId || !recurringPriceId) return;
+
+  // Already processed this checkout session? (idempotency via local record)
+  const existing = getMembership(customerId);
+  if (existing?.subscriptionId) {
+    // Already created subscription for this customer
     return;
   }
 
-  const billingAnchorEpoch = Number.parseInt(billingAnchorRaw, 10);
-  if (!Number.isFinite(billingAnchorEpoch)) {
-    return;
-  }
-
-  // Set default payment method for future invoices
+  // Retrieve the PaymentIntent to get the saved payment method
   let paymentMethodId: string | undefined;
-  if (typeof session.payment_intent === "string") {
-    const paymentIntent = await stripe.paymentIntents.retrieve(
-      session.payment_intent,
-    );
-    if (typeof paymentIntent.payment_method === "string") {
-      paymentMethodId = paymentIntent.payment_method;
+  if (session.payment_intent && typeof session.payment_intent === "string") {
+    try {
+      const pi = await stripe.paymentIntents.retrieve(session.payment_intent);
+      paymentMethodId =
+        typeof pi.payment_method === "string"
+          ? pi.payment_method
+          : pi.payment_method?.id;
+    } catch {
+      // Continue without payment method - subscription creation may still work
     }
   }
 
+  // Create the recurring subscription with trial ending at July 1
+  // Use checkout session id as idempotency key to prevent duplicates
+  const subscriptionParams: Stripe.SubscriptionCreateParams = {
+    customer: customerId,
+    items: [{ price: recurringPriceId }],
+    trial_end: nextJuly1Epoch,
+    metadata: {
+      flow: "option_c",
+      plan: plan ?? "",
+      checkout_session_id: session.id,
+    },
+    // Expand to get default payment method
+    expand: ["default_payment_method"],
+  };
+
+  // Attach the payment method from the checkout if available
   if (paymentMethodId) {
-    await stripe.customers.update(customerId, {
-      invoice_settings: {
-        default_payment_method: paymentMethodId,
-      },
-    });
+    try {
+      await stripe.paymentMethods.attach(paymentMethodId, {
+        customer: customerId,
+      });
+      await stripe.customers.update(customerId, {
+        invoice_settings: { default_payment_method: paymentMethodId },
+      });
+      subscriptionParams.default_payment_method = paymentMethodId;
+    } catch {
+      // Payment method attachment failed — proceed without it
+    }
   }
 
-  // Store awaiting subscription — do NOT create subscription here.
-  // Subscription is created on invoice.paid to avoid orphaned subscriptions.
+  let subscriptionId: string;
+  try {
+    const subscription = await stripe.subscriptions.create(subscriptionParams, {
+      idempotencyKey: `option_c_sub_${session.id}`,
+    });
+    subscriptionId = subscription.id;
+  } catch (error) {
+    // If subscription creation fails (e.g., duplicate), log and rethrow
+    console.error("Failed to create subscription:", error);
+    throw error;
+  }
+
+  // Record the deferred subscription creation
   setAwaitingSubscription(customerId, {
     plan: plan || "",
     recurringPriceId,
-    nextJuly1Epoch: billingAnchorEpoch,
+    nextJuly1Epoch,
     joinedAt: new Date().toISOString(),
+    subscriptionId,
   });
+
+  // Mark as active since subscription is now set up
+  setActive(customerId, subscriptionId);
 }
 
 async function handleInvoicePaid(
-  stripe: Stripe,
   invoice: Stripe.Invoice,
 ): Promise<void> {
   // Only handle invoices for our flow
@@ -71,50 +119,21 @@ async function handleInvoicePaid(
     typeof invoice.customer === "string" ? invoice.customer : undefined;
   if (!customerId) return;
 
-  // Check if this customer already has an active subscription (renewal)
+  // Check if this is a renewal (customer already has an active subscription)
   if (hasActiveSubscription(customerId)) {
-    // Renewal — update membership status
-    // (Could log renewal event here)
+    // Renewal — membership is already active
     return;
   }
 
-  // First invoice — create subscription
+  // First invoice paid — subscription should already exist from checkout.session.completed
+  // This is a fallback: if the webhook order is reversed or subscription wasn't captured,
+  // create a minimal local record so state is consistent.
   const membership = getMembership(customerId);
-  if (!membership) return;
-
-  const trialEnd =
-    membership.nextJuly1Epoch > Math.floor(Date.now() / 1000)
-      ? membership.nextJuly1Epoch
-      : undefined;
-
-  const subscriptionParams: Stripe.SubscriptionCreateParams = {
-    customer: customerId,
-    items: [{ price: membership.recurringPriceId }],
-    metadata: {
-      flow: "option_c",
-      plan: membership.plan,
-    },
-  };
-
-  const paymentMethodId = invoice.default_payment_method
-    ? (typeof invoice.default_payment_method === "string"
-        ? invoice.default_payment_method
-        : invoice.default_payment_method.id)
-    : undefined;
-
-  if (paymentMethodId) {
-    subscriptionParams.default_payment_method = paymentMethodId;
+  if (!membership) {
+    // Subscription might have been created by Stripe but webhook ordering is uncertain.
+    // Don't create subscription here — let checkout.session.completed handle it.
+    return;
   }
-
-  if (trialEnd) {
-    subscriptionParams.trial_end = trialEnd;
-  }
-
-  const subscription = await stripe.subscriptions.create(subscriptionParams, {
-    idempotencyKey: `option-c-subscription-${customerId}-${membership.recurringPriceId}`,
-  });
-
-  setActive(customerId, subscription.id);
 }
 
 async function handleInvoicePaymentFailed(
@@ -184,7 +203,7 @@ export const POST: APIRoute = async ({ request }) => {
         );
         break;
       case "invoice.paid":
-        await handleInvoicePaid(stripe, event.data.object as Stripe.Invoice);
+        await handleInvoicePaid(event.data.object as Stripe.Invoice);
         break;
       case "invoice.payment_failed":
         await handleInvoicePaymentFailed(

@@ -2,9 +2,7 @@ import type { APIRoute } from "astro";
 import Stripe from "stripe";
 import {
   formatAmountNzd,
-  getFirstTermAmount,
   getNextJulyAnchorEpoch,
-  getPlanDisplayName,
   getPriceForPlan,
   getSiteBaseUrl,
   isPromoWindowNz,
@@ -14,7 +12,6 @@ import {
 type CreateSessionPayload = {
   plan?: MembershipPlan;
   email?: string;
-  promoCode?: string;
 };
 
 type ExistingCustomerInfo = {
@@ -51,6 +48,12 @@ async function getExistingCustomerInfo(
   };
 }
 
+/**
+ * Option C: mode=payment (one-time charge)
+ * - First term is charged at checkout as a one-time payment
+ * - Webhook creates the recurring subscription deferred with trial_end = next July 1
+ * - Payment method is saved for future off-session charges
+ */
 export const POST: APIRoute = async ({ request }) => {
   let payload: CreateSessionPayload;
 
@@ -94,39 +97,34 @@ export const POST: APIRoute = async ({ request }) => {
   const annualAmount = recurringPrice.unit_amount;
   const customerInfo = await getExistingCustomerInfo(stripe, email);
   const inPromoWindow = isPromoWindowNz();
+  const eligibleForPromo = inPromoWindow && !customerInfo.hasPriorSubscriptions;
 
-  // First-time subscriber in promo window without prior subscriptions
-  const promoApplied =
-    inPromoWindow &&
-    !customerInfo.hasPriorSubscriptions;
-
-  const dueTodayAmount = getFirstTermAmount(annualAmount, inPromoWindow, promoApplied);
-
-  const planDisplayName = getPlanDisplayName(plan);
   const renewalMessage = `Then ${formatAmountNzd(annualAmount)} per year starting 1 July.`;
 
+  // mode=payment for Option C: one-time charge, subscription created in webhook
   const params: Stripe.Checkout.SessionCreateParams = {
     mode: "payment",
     success_url: `${siteBaseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${siteBaseUrl}/cancel`,
     allow_promotion_codes: true,
-    payment_intent_data: {
-      setup_future_usage: "off_session",
-      metadata: {
-        flow: "option_c",
-        plan,
-        recurring_price_id: recurringPriceId,
-        billing_anchor_epoch: String(billingCycleAnchor),
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: "nzd",
+          unit_amount: annualAmount,
+          product_data: {
+            name: recurringPrice.product?.toString() ?? "Membership",
+          },
+        },
       },
-    },
+    ],
     metadata: {
       flow: "option_c",
       plan,
       recurring_price_id: recurringPriceId,
-      billing_anchor_epoch: String(billingCycleAnchor),
       annual_amount: String(annualAmount),
-      due_today_amount: String(dueTodayAmount),
-      promo_applied: promoApplied ? "true" : "false",
+      next_july1_epoch: String(billingCycleAnchor),
       renewal_message: renewalMessage,
     },
     custom_text: {
@@ -134,20 +132,17 @@ export const POST: APIRoute = async ({ request }) => {
         message: renewalMessage,
       },
     },
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: "nzd",
-          unit_amount: dueTodayAmount,
-          product_data: {
-            name: `${planDisplayName} (first term payment)`,
-            description: renewalMessage,
-          },
-        },
-      },
-    ],
   };
+
+  // Save payment method for future off-session charges (renewal billing)
+  params.payment_intent_data = {
+    setup_future_usage: "off_session",
+  };
+
+  // Apply promotion code for eligible Jan-Jun first-time subscribers
+  if (eligibleForPromo) {
+    params.discounts = [{ promotion_code: import.meta.env.STRIPE_PROMO_CODE }];
+  }
 
   if (customerInfo.id) {
     params.customer = customerInfo.id;
@@ -163,10 +158,9 @@ export const POST: APIRoute = async ({ request }) => {
       id: session.id,
       url: session.url,
       plan,
-      dueTodayAmount,
       annualAmount,
       billingCycleAnchor,
-      promoApplied,
+      eligibleForPromo,
       renewalMessage,
     });
   } catch (error) {

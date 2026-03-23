@@ -30,22 +30,6 @@ export function getNextJulyAnchorEpoch(now = DateTime.now()): number {
   return Math.floor(getNextJulyAnchorDate(now).toSeconds());
 }
 
-/**
- * Returns the first-term charge amount.
- * Jan–Jun with valid promo → 50% of annual.
- * Jul–Dec, or Jan–Jun without promo → 100% of annual.
- */
-export function getFirstTermAmount(
-  annualAmount: number,
-  inPromoWindow: boolean,
-  promoApplied: boolean,
-): number {
-  if (inPromoWindow && promoApplied) {
-    return Math.round(annualAmount * 0.5);
-  }
-  return annualAmount;
-}
-
 export function getSiteBaseUrl(requestUrl: string): string {
   const configured = import.meta.env.PUBLIC_SITE_URL?.trim();
   if (configured) return configured.replace(/\/$/, "");

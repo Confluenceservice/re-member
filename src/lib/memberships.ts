@@ -47,7 +47,7 @@ export function getMembership(customerId: string): MembershipRecord | null {
 
 export function setAwaitingSubscription(
   customerId: string,
-  data: Omit<MembershipRecord, "status" | "subscriptionId" | "customerId">,
+  data: Omit<MembershipRecord, "status" | "customerId">,
 ): void {
   const store = loadStore();
   store[customerId] = {

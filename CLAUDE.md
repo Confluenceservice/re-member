@@ -19,7 +19,7 @@ Implement Option C custom flow so membership subscriptions can:
 ## Verified Business Logic
 - Promo code is restricted to first-time transactions.
 - Promo code expires at end of 30 June 2026 (NZ time).
-- Initial Jan-to-Jun prorated invoices show 50% discount.
+- Initial Jan-to-Jun invoices show 50% discount.
 - Renewal cycle invoice at July boundary is full annual price.
 
 ## Option C Checkout Pattern
@@ -35,7 +35,7 @@ Use `checkout.sessions.create` with:
 
 First-term amount logic:
 - Jan-Jun NZ + first-time subscriber + promo code `LDTY8PQR`: charge 50% of annual amount.
-- Otherwise: charge prorated amount to next 1 July.
+- Otherwise: charge full amount to next 1 July.
 
 Webhook behavior (`checkout.session.completed`):
 - set customer default payment method from PaymentIntent
