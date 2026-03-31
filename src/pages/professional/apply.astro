@@ -1,0 +1,353 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const token = Astro.url.searchParams.get("token");
+---
+
+<BaseLayout
+  title="Professional Membership Application"
+  description="Apply for Professional Membership with ELDAA."
+>
+  <section class="card">
+    <h1 class="headline">Professional Membership</h1>
+    <p class="sub">
+      Upload your required documents, then complete payment.
+    </p>
+  </section>
+
+  <!-- Registration Form -->
+  <section id="registration-section" class="card" style="margin-top: 1rem;">
+    <h2 style="margin: 0 0 1rem; font-size: 1.25rem;">Start Your Application</h2>
+    <p style="color: var(--muted); margin-bottom: 1rem;">
+      Enter your details to begin. You'll receive a link to continue your application.
+    </p>
+
+    <div class="form-field">
+      <label for="fullName" style="display: block; font-weight: 600; margin-bottom: 0.45rem;">
+        Full Name
+      </label>
+      <input
+        id="fullName"
+        name="fullName"
+        type="text"
+        placeholder="Jane Doe"
+        autocomplete="name"
+        style="width: 100%; padding: 0.7rem; border: 1px solid var(--border); border-radius: 10px; font-size: 1.1rem;"
+      />
+    </div>
+
+    <div class="form-field" style="margin-top: 1rem;">
+      <label for="email" style="display: block; font-weight: 600; margin-bottom: 0.45rem;">
+        Email Address
+      </label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        placeholder="jane@example.com"
+        autocomplete="email"
+        style="width: 100%; padding: 0.7rem; border: 1px solid var(--border); border-radius: 10px; font-size: 1.1rem;"
+      />
+    </div>
+
+    <button id="register-btn" class="button" style="margin-top: 1.5rem; width: 100%;">
+      Start Application
+    </button>
+
+    <p id="register-message" style="margin-top: 1rem; color: var(--muted); display: none;"></p>
+  </section>
+
+  <!-- Upload Interface -->
+  <section id="upload-section" class="card" style="margin-top: 1rem; display: none;">
+    <h2 id="welcome-message" style="margin: 0 0 1rem; font-size: 1.25rem;"></h2>
+
+    <div id="progress-info" style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg); border-radius: 8px;">
+      <p style="margin: 0 0 0.5rem; font-weight: 600;">
+        Documents Uploaded: <span id="upload-count">0</span> / 7
+      </p>
+      <p id="upload-status-text" style="margin: 0; color: var(--muted); font-size: 0.9rem;"></p>
+    </div>
+
+    <div id="document-list" style="display: flex; flex-direction: column; gap: 1rem;">
+      <!-- Document items will be generated here -->
+    </div>
+
+    <div id="payment-section" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+      <button id="proceed-payment-btn" class="button" style="width: 100%;" disabled>
+        Upload all documents to continue
+      </button>
+    </div>
+  </section>
+
+  <!-- Already Paid -->
+  <section id="paid-section" class="card" style="margin-top: 1rem; display: none;">
+    <h2 style="margin: 0 0 1rem; font-size: 1.5rem;">Application Complete</h2>
+    <p>Your Professional Membership application has been completed. Thank you!</p>
+    <p style="margin-top: 1rem;">
+      <a href="https://eldaa.org.nz" style="color: var(--accent);">Return to ELDAA website</a>
+    </p>
+  </section>
+
+  <!-- Error -->
+  <section id="error-section" class="card" style="margin-top: 1rem; display: none;">
+    <h2 style="margin: 0 0 1rem; color: var(--warn);">Error</h2>
+    <p id="error-message"></p>
+    <a href="/professional/apply" class="button" style="display: inline-block; margin-top: 1rem;">
+      Start New Application
+    </a>
+  </section>
+</BaseLayout>
+
+<script is:inline define:vars={{ token }}>
+  const REQUIRED_DOCS = [
+    { id: "application", label: "Application Form", description: "Completed PM application form" },
+    { id: "training", label: "Certificates of Training", description: "Evidence of completed training" },
+    { id: "ethics", label: "Code of Ethics", description: "Signed ELDAA Code of Ethics and Scope of Practice" },
+    { id: "criminal", label: "Criminal Records Check", description: "Background check" },
+    { id: "advance_care", label: "Advanced Care Planning (NZ)", description: "4 modules completed" },
+    { id: "assisted_dying", label: "Assisted Dying Training", description: "3 modules completed" },
+    { id: "fundamentals", label: "Fundamentals of Palliative Care", description: "4 modules (Hospice NZ online)" },
+  ];
+
+  function showSection(id) {
+    document.querySelectorAll("section.card").forEach(s => s.style.display = "none");
+    document.getElementById(id).style.display = "block";
+  }
+
+  function getDocLabel(id) {
+    const doc = REQUIRED_DOCS.find(d => d.id === id);
+    return doc ? doc.label : id;
+  }
+
+  // Registration
+  const registerBtn = document.getElementById("register-btn");
+  const registerMessage = document.getElementById("register-message");
+
+  if (registerBtn) {
+    registerBtn.addEventListener("click", async () => {
+      const fullName = document.getElementById("fullName").value.trim();
+      const email = document.getElementById("email").value.trim();
+
+      if (!fullName || !email) {
+        registerMessage.textContent = "Please enter your name and email.";
+        registerMessage.style.display = "block";
+        return;
+      }
+
+      registerBtn.disabled = true;
+      registerBtn.textContent = "Sending...";
+
+      try {
+        const res = await fetch("/api/professional/apply", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fullName, email })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          registerMessage.textContent = `Application started! A link has been sent to ${email}. Check your inbox (and spam folder).`;
+          registerMessage.style.display = "block";
+          registerMessage.classList.add("status-ok");
+          registerBtn.textContent = "Link Sent";
+        } else {
+          registerMessage.textContent = data.error || "Failed to create application.";
+          registerMessage.style.display = "block";
+          registerBtn.disabled = false;
+          registerBtn.textContent = "Start Application";
+        }
+      } catch (err) {
+        registerMessage.textContent = "Network error. Please try again.";
+        registerMessage.style.display = "block";
+        registerBtn.disabled = false;
+        registerBtn.textContent = "Start Application";
+      }
+    });
+  }
+
+  // If token present, load status
+  if (token) {
+    (async () => {
+      try {
+        const res = await fetch(`/api/professional/apply?token=${encodeURIComponent(token)}`);
+        const data = await res.json();
+
+        if (data.status === "new") {
+          showSection("registration-section");
+        } else if (data.status === "paid") {
+          document.getElementById("welcome-message").textContent = `Welcome, ${data.fullName}`;
+          showSection("paid-section");
+        } else if (data.status === "partial" || data.status === "complete") {
+          document.getElementById("welcome-message").textContent = `Welcome back, ${data.fullName}`;
+          showSection("upload-section");
+          renderUploadInterface(data);
+        } else if (data.error) {
+          document.getElementById("error-message").textContent = data.error;
+          showSection("error-section");
+        }
+      } catch (err) {
+        document.getElementById("error-message").textContent = "Failed to load application.";
+        showSection("error-section");
+      }
+    })();
+  }
+
+  function renderUploadInterface(data) {
+    const uploaded = data.docsUploaded || [];
+    const count = uploaded.length;
+    document.getElementById("upload-count").textContent = count;
+    document.getElementById("upload-status-text").textContent =
+      count === 7 ? "All documents uploaded!" : `${7 - count} document(s) remaining`;
+
+    const list = document.getElementById("document-list");
+    list.innerHTML = "";
+
+    REQUIRED_DOCS.forEach(doc => {
+      const isUploaded = uploaded.includes(doc.id);
+      const item = document.createElement("div");
+      item.className = "doc-item";
+      item.style.cssText = `
+        padding: 1rem;
+        border: 1px solid ${isUploaded ? "var(--ok)" : "var(--border)"};
+        border-radius: 8px;
+        background: ${isUploaded ? "#f0fdf4" : "var(--surface)"};
+      `;
+      item.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <p style="margin: 0; font-weight: 600;">${doc.label}</p>
+            <p style="margin: 0.25rem 0 0; color: var(--muted); font-size: 0.85rem;">${doc.description}</p>
+          </div>
+          <span class="status-badge" style="
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: ${isUploaded ? "var(--ok)" : "#f3f4f6"};
+            color: ${isUploaded ? "#fff" : "var(--muted)"};
+          ">${isUploaded ? "Uploaded" : "Required"}</span>
+        </div>
+        ${!isUploaded ? `
+          <div style="margin-top: 0.75rem;">
+            <input type="file" id="file-${doc.id}" accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx" style="display: none;" />
+            <button class="upload-btn" data-doc="${doc.id}" style="
+              padding: 0.5rem 1rem;
+              border: 1px solid var(--accent);
+              border-radius: 6px;
+              background: var(--surface);
+              color: var(--accent);
+              cursor: pointer;
+              font-size: 0.9rem;
+            ">Choose File</button>
+            <span class="filename" style="margin-left: 0.5rem; color: var(--muted); font-size: 0.85rem;"></span>
+          </div>
+        ` : ""}
+      `;
+      list.appendChild(item);
+    });
+
+    // Add upload handlers
+    document.querySelectorAll(".upload-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const docId = btn.dataset.doc;
+        document.getElementById(`file-${docId}`).click();
+      });
+    });
+
+    document.querySelectorAll("input[type=file]").forEach(input => {
+      input.addEventListener("change", async (e) => {
+        const docId = e.target.id.replace("file-", "");
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const btn = document.querySelector(`.upload-btn[data-doc="${docId}"]`);
+        const filenameSpan = btn.nextElementSibling;
+        btn.disabled = true;
+        btn.textContent = "Uploading...";
+
+        try {
+          const formData = new FormData();
+          formData.append("token", token);
+          formData.append("docType", docId);
+          formData.append("file", file);
+
+          const res = await fetch("/api/professional/upload-file", {
+            method: "POST",
+            body: formData
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            filenameSpan.textContent = file.name;
+            btn.textContent = "Uploaded";
+            btn.style.background = "var(--ok)";
+            btn.style.color = "#fff";
+            btn.style.borderColor = "var(--ok)";
+            updateProgress();
+          } else {
+            btn.disabled = false;
+            btn.textContent = "Choose File";
+            alert(data.error || "Upload failed");
+          }
+        } catch (err) {
+          btn.disabled = false;
+          btn.textContent = "Choose File";
+          alert("Upload failed");
+        }
+      });
+    });
+
+    // Payment button
+    const paymentBtn = document.getElementById("proceed-payment-btn");
+    if (data.status === "complete") {
+      paymentBtn.disabled = false;
+      paymentBtn.textContent = "Proceed to Payment";
+      paymentBtn.addEventListener("click", async () => {
+        paymentBtn.disabled = true;
+        paymentBtn.textContent = "Loading...";
+
+        try {
+          const res = await fetch("/api/professional/upload-complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token })
+          });
+
+          const data = await res.json();
+          if (data.url) {
+            window.location.href = data.url;
+          } else {
+            alert(data.error || "Failed to create payment session");
+            paymentBtn.disabled = false;
+            paymentBtn.textContent = "Proceed to Payment";
+          }
+        } catch (err) {
+          alert("Failed to create payment session");
+          paymentBtn.disabled = false;
+          paymentBtn.textContent = "Proceed to Payment";
+        }
+      });
+    }
+  }
+
+  function updateProgress() {
+    // Re-fetch status to get updated count
+    fetch(`/api/professional/apply?token=${encodeURIComponent(token)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.docsUploaded) {
+          const count = data.docsUploaded.length;
+          document.getElementById("upload-count").textContent = count;
+          document.getElementById("upload-status-text").textContent =
+            count === 7 ? "All documents uploaded!" : `${7 - count} document(s) remaining`;
+
+          if (count === 7) {
+            const btn = document.getElementById("proceed-payment-btn");
+            btn.disabled = false;
+            btn.textContent = "Proceed to Payment";
+          }
+        }
+      });
+  }
+</script>
