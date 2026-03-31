@@ -123,8 +123,8 @@ export const POST: APIRoute = async ({ request, url }) => {
         annual_amount: String(annualAmount),
         next_july1_epoch: String(billingCycleAnchor),
         renewal_message: renewalMessage,
-        first_name: applicant.fullName.split(" ")[0],
-        last_name: applicant.fullName.split(" ").slice(1).join(" ") || "",
+        first_name: applicant.firstName,
+        last_name: applicant.lastName,
       },
       custom_text: {
         submit: {

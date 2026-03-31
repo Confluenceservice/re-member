@@ -189,7 +189,7 @@ export const POST: APIRoute = async ({ request }) => {
     const rootFolderId = appsFolderId;
 
     // Create applicant's folder with human-readable name
-    const folderName = applicant.fullName.replace(/[^a-zA-Z0-9]/g, "_");
+    const folderName = `${applicant.firstName}_${applicant.lastName}`.replace(/[^a-zA-Z0-9]/g, "_");
     const applicantFolderId = await ensureFolderExists(drive, rootFolderId, folderName);
 
     // Create doc type folder
