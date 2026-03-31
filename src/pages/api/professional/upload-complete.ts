@@ -92,9 +92,10 @@ export const POST: APIRoute = async ({ request, url }) => {
     const annualAmount = recurringPrice.unit_amount;
     const inPromoWindow = isPromoWindowNz();
 
-    // For this flow, always charge full amount (no promo code for uploads)
-    // Could add promo code support if needed
-    const firstTermAmount = annualAmount;
+    // Upload applicants are always first-time — apply 50% discount during promo window
+    const firstTermAmount = inPromoWindow
+      ? Math.round(annualAmount * 0.5)
+      : annualAmount;
 
     const renewalMessage = `Then ${formatAmountNzd(annualAmount)} per year starting 1 July.`;
 
@@ -148,6 +149,7 @@ export const POST: APIRoute = async ({ request, url }) => {
       sessionId: session.id,
       firstTermAmount,
       annualAmount,
+      eligibleForPromo: inPromoWindow,
     });
 
     return Response.json({
@@ -156,6 +158,7 @@ export const POST: APIRoute = async ({ request, url }) => {
       plan: "professional",
       firstTermAmount,
       annualAmount,
+      eligibleForPromo: inPromoWindow,
     });
   } catch (error) {
     Sentry.captureException(error, { extra: { applicantId: applicant.id } });
