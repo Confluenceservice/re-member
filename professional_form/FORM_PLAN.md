@@ -195,6 +195,7 @@ Webhook handles subscription creation (existing flow).
 - [ ] Should there be an admin interface for staff to view upload status?
 - [ ] What file size limits? (suggest 10MB per file)
 - [ ] Should we support .zip uploads for bulk certificates?
+- [x] Gmail sending fails with "Precondition check failed" — requires Google Cloud domain-wide delegation setup (service account needs `gmail.send` scope in Workspace Admin). Resume link shown on-screen as workaround. Email sending works once delegation is configured.
 
 ---
 
