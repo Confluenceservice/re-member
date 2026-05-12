@@ -24,6 +24,23 @@ const token = Astro.url.searchParams.get("token");
     <div id="step-dots" class="grid grid-cols-4 sm:grid-cols-8 gap-2"></div>
   </div>
 
+  <div
+    id="resume-link-warning"
+    class="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-4 hidden"
+  >
+    <h2 class="m-0 mb-2 text-base text-amber-900 font-semibold">Email not sent</h2>
+    <p class="m-0 text-sm text-amber-900">
+      We saved your application, but we could not send your resume email. Keep this link to continue later:
+      <a
+        id="resume-link-fallback"
+        class="block mt-2 break-all text-blue-700 underline"
+        href="#"
+        target="_blank"
+        rel="noopener noreferrer"
+      ></a>
+    </p>
+  </div>
+
   <!-- Registration (step 0 - shown when no token) -->
   <section id="section-register" class="bg-white border border-gray-200 rounded-xl p-4 mt-4">
     <h2 class="m-0 mb-4 text-xl">Start Your Application</h2>
@@ -500,6 +517,45 @@ const token = Astro.url.searchParams.get("token");
   function isStepComplete(stepIdx) { return !!stepCompletion[stepIdx]; }
   function completedCount() { return Object.keys(stepCompletion).length; }
 
+  function setResumeLinkWarning(resumeLink) {
+    const warning = document.getElementById("resume-link-warning");
+    const link = document.getElementById("resume-link-fallback");
+    if (!warning || !link) return;
+
+    if (!resumeLink) {
+      warning.classList.add("hidden");
+      link.setAttribute("href", "#");
+      link.textContent = "";
+      return;
+    }
+
+    link.setAttribute("href", resumeLink);
+    link.textContent = resumeLink;
+    warning.classList.remove("hidden");
+  }
+
+  function extractTokenFromResumeLink(resumeLink) {
+    if (!resumeLink) return "";
+    try {
+      const parsed = new URL(resumeLink, window.location.origin);
+      return parsed.searchParams.get("token") || "";
+    } catch {
+      const fallback = resumeLink.split("token=")[1] || "";
+      return fallback.split("&")[0];
+    }
+  }
+
+  function syncTokenToUrl(resumeToken) {
+    if (!resumeToken) return;
+    const current = new URL(window.location.href);
+    current.searchParams.set("token", resumeToken);
+    const nextUrl = `${current.pathname}${current.search}${current.hash}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState({}, "", nextUrl);
+    }
+  }
+
   function updateDots() {
     const dotsContainer = document.getElementById("step-dots");
     if (!dotsContainer) return;
@@ -729,7 +785,11 @@ const token = Astro.url.searchParams.get("token");
         window.__applicantId__ = data.applicantId;
       }
       if (data.resumeLink) {
-        window.__token__ = data.resumeLink?.split("token=")[1] || activeToken;
+        const nextToken = extractTokenFromResumeLink(data.resumeLink) || activeToken;
+        if (nextToken) {
+          window.__token__ = nextToken;
+          syncTokenToUrl(nextToken);
+        }
       }
     } catch {}
   }
@@ -1050,12 +1110,23 @@ const token = Astro.url.searchParams.get("token");
       if (data.success) {
         applicantId = data.applicantId;
         window.__applicantId__ = data.applicantId;
-        window.__token__ = data.resumeLink?.split("token=")[1] || token;
+        const resumeLink = data.resumeLink || "";
+        const resumeToken = extractTokenFromResumeLink(resumeLink) || token || "";
+        if (resumeToken) {
+          window.__token__ = resumeToken;
+          syncTokenToUrl(resumeToken);
+        }
 
         document.getElementById("firstName").value = firstName;
         document.getElementById("lastName").value = lastName;
         document.getElementById("phone").value = phone;
         document.getElementById("email").value = email;
+
+        if (data.emailSent === false && resumeLink) {
+          setResumeLinkWarning(resumeLink);
+        } else {
+          setResumeLinkWarning("");
+        }
 
         document.getElementById("section-register").classList.add("hidden");
         document.getElementById("step-indicator").classList.remove("hidden");
@@ -1083,6 +1154,7 @@ const token = Astro.url.searchParams.get("token");
         window.__docsUploaded__ = {};
 
         if (data.status === "paid") {
+          setResumeLinkWarning("");
           document.getElementById("step-indicator").classList.add("hidden");
           showStep(0);
           document.getElementById("section-register").classList.add("hidden");
@@ -1091,10 +1163,12 @@ const token = Astro.url.searchParams.get("token");
         }
 
         if (data.status === "new" || data.status === "error") {
+          setResumeLinkWarning("");
           document.getElementById("step-indicator").classList.add("hidden");
           showStep(0);
           return;
         }
+        setResumeLinkWarning("");
 
         window.__token__ = token;
         if (data.applicantId) {

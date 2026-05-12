@@ -22,6 +22,15 @@ Astro SSR app with:
 - First-time subscribers: prorated first-term charge based on weeks remaining until 1 July.
 - Existing subscribers: full annual amount (no proration).
 - Professional checkout redirects to `eldaa.org.nz/professional-membership` after payment.
+- Professional application resume emails are sent via Gmail API (`/api/professional/apply`).
+
+## Transactional email setup (Gmail API)
+- Required env vars:
+  - `GMAIL_SENDER_EMAIL`
+  - `GMAIL_OAUTH_CLIENT_ID`
+  - `GMAIL_OAUTH_CLIENT_SECRET`
+  - `GMAIL_OAUTH_REFRESH_TOKEN`
+- Local fallback: if OAuth env vars are not set, the app can use Application Default Credentials (ADC) with `gmail.send` scope.
 
 ## Stripe webhook endpoints
 - Staging (`eldaa`): `https://eldaa.fly.dev/api/stripe-webhook`

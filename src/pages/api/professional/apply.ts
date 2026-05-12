@@ -273,9 +273,11 @@ export const POST: APIRoute = async ({ request, url }) => {
 
     const siteBaseUrl = getSiteBaseUrl(url.href);
     const resumeLink = `${siteBaseUrl}/professional/apply?token=${newResumeToken}`;
+    let emailSent = false;
 
     try {
       await sendResumeLink(email, fullName, resumeLink);
+      emailSent = true;
       logger.info("resume_email_sent", { applicantId, email });
     } catch (emailError) {
       logger.error("resume_email_failed", {
@@ -292,6 +294,7 @@ export const POST: APIRoute = async ({ request, url }) => {
       success: true,
       resumeLink,
       applicantId,
+      emailSent,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
