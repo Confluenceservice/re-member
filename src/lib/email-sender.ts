@@ -5,51 +5,80 @@ interface EmailParams {
   subject: string;
   body: string;
 }
+const GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send";
 
-function getGmailClient() {
-  const email = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL?.trim();
-  const keyRaw = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_KEY?.trim();
+function getSenderEmail(): string {
+  const sender =
+    process.env.GMAIL_SENDER_EMAIL?.trim() || process.env.GMAIL_SENDER?.trim();
 
-  if (!email || !keyRaw) {
-    throw new Error("Missing GOOGLE_SHEETS service account config.");
+  if (!sender) {
+    throw new Error("Missing GMAIL_SENDER_EMAIL.");
   }
 
-  const key = keyRaw.replace(/\\n/g, "\n");
-
-  const auth = new google.auth.JWT({
-    email,
-    key,
-    scopes: [
-      "https://www.googleapis.com/auth/gmail.send",
-    ],
-  });
-
-  return google.gmail({ version: "v1", auth });
+  return sender;
 }
 
-function createMessage(params: EmailParams): string {
+function getOAuthConfig():
+  | { clientId: string; clientSecret: string; refreshToken: string }
+  | null {
+  const clientId =
+    process.env.GMAIL_OAUTH_CLIENT_ID?.trim() ||
+    process.env.GMAIL_CLIENT_ID?.trim();
+  const clientSecret =
+    process.env.GMAIL_OAUTH_CLIENT_SECRET?.trim() ||
+    process.env.GMAIL_CLIENT_SECRET?.trim();
+  const refreshToken =
+    process.env.GMAIL_OAUTH_REFRESH_TOKEN?.trim() ||
+    process.env.GMAIL_REFRESH_TOKEN?.trim();
+
+  const anyConfigured = clientId || clientSecret || refreshToken;
+  if (!anyConfigured) return null;
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error(
+      "Incomplete Gmail OAuth config. Set GMAIL_OAUTH_CLIENT_ID, GMAIL_OAUTH_CLIENT_SECRET, and GMAIL_OAUTH_REFRESH_TOKEN."
+    );
+  }
+
+  return { clientId, clientSecret, refreshToken };
+}
+
+async function getGmailClient() {
+  const oauthConfig = getOAuthConfig();
+
+  if (oauthConfig) {
+    const oauthClient = new google.auth.OAuth2(
+      oauthConfig.clientId,
+      oauthConfig.clientSecret
+    );
+    oauthClient.setCredentials({ refresh_token: oauthConfig.refreshToken });
+    return google.gmail({ version: "v1", auth: oauthClient });
+  }
+
+  const googleAuth = new google.auth.GoogleAuth({
+    scopes: [GMAIL_SEND_SCOPE],
+  });
+  return google.gmail({ version: "v1", auth: googleAuth });
+}
+
+function createMessage(params: EmailParams, senderEmail: string): string {
   const message = [
     `To: ${params.to}`,
+    `From: ${senderEmail}`,
     `Subject: ${params.subject}`,
+    "MIME-Version: 1.0",
+    "Content-Type: text/plain; charset=UTF-8",
     "",
     params.body,
-  ].join("\n");
+  ].join("\r\n");
 
   return Buffer.from(message).toString("base64url");
 }
 
 export async function sendEmail(params: EmailParams): Promise<void> {
-  const gmail = getGmailClient();
-  const message = createMessage(params);
-
-  // Use the service account email as the sender
-  // Note: This requires domain-wide delegation or the service account
-  // to be added as a sending authority in Google Workspace
-  const senderEmail = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL?.trim();
-
-  if (!senderEmail) {
-    throw new Error("Missing GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL.");
-  }
+  const senderEmail = getSenderEmail();
+  const gmail = await getGmailClient();
+  const message = createMessage(params, senderEmail);
 
   await gmail.users.messages.send({
     userId: "me",
