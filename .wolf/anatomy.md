@@ -1,11 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-06-22T23:50:52.285Z
-> Files: 136 tracked | Anatomy hits: 0 | Misses: 0
-
-## ../.claude/plans/
-
-- `witty-fluttering-cerf.md` — Membership Renewal Form System — Design + Implementation Plan (~5737 tok)
+> Auto-maintained by OpenWolf. Last scanned: 2026-06-23T00:11:39.952Z
+> Files: 134 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -127,7 +123,7 @@
 
 ## docs/superpowers/plans/
 
-- `2026-06-23-membership-renewal-form.md` — Membership Renewal Form Implementation Plan (~20704 tok)
+- `2026-06-23-membership-renewal-form.md` — Membership Renewal Form Implementation Plan (~20817 tok)
 
 ## professional_form/
 
@@ -137,7 +133,7 @@
 ## src/
 
 - `.DS_Store` (~1639 tok)
-- `env.d.ts` — / <reference types="astro/client" /> (~169 tok)
+- `env.d.ts` — / <reference types="astro/client" /> (~142 tok)
 - `env.ts` (~7 tok)
 - `middleware.ts` — In-memory rate limiter for API routes. (~939 tok)
 
@@ -147,7 +143,6 @@
 
 ## src/lib/
 
-- `_mock_debug.test.ts` — Declares mockPricesList (~112 tok)
 - `drive-files.ts` — Exports DriveFileRecord, addDriveFile, softDeleteDriveFile, listDriveFiles + 2 more (~1414 tok)
 - `email-sender.test.ts` — Hoisted mocks — must come before the module under test imports them. (~2846 tok)
 - `email-sender.ts` — Exports EmailTemplate, sendEmail, sendProfessionalConfirmation, sendAssociateConfirmation + 3 more (~2274 tok)
@@ -159,12 +154,12 @@
 - `memberships.test.ts` — Test the logic in isolation by re-implementing the store operations locally (~2001 tok)
 - `memberships.ts` — Exports MembershipStatus, MembershipRecord, getMembership, setAwaitingSubscription + 4 more (~639 tok)
 - `renewal-sheet.test.ts` — Declares call (~1733 tok)
-- `renewal-sheet.ts` — Exports PdEntry, RenewalInput, RenewalRow, appendRenewal + 2 more. Renewals sheet writer (lazy-created on first write), professional development entries, renewal row schema. (~1458 tok)
+- `renewal-sheet.ts` — Exports PdEntry, RenewalInput, RenewalRow, appendRenewal + 2 more (~1458 tok)
 - `staging.ts` — Returns the staging folder-name prefix for the current environment. (~206 tok)
 - `stripe-checkout.test.ts` — NZ: dt (~1414 tok)
 - `stripe-checkout.ts` — Calculate first-term amount using proration from now until next July 1. (~828 tok)
-- `stripe-products.test.ts` — Declares mockPricesList (~1092 tok)
-- `stripe-products.ts` — Exports LookupKey, resolveRenewalPrice, invalidateRenewalPriceCache. Resolves Stripe prices by lookup_key (cerebrum 2026-06-14 pattern — no hardcoded price IDs). (~687 tok)
+- `stripe-products.test.ts` — Declares mockPricesRetrieve (~1208 tok)
+- `stripe-products.ts` — Exports LookupKey, resolveRenewalPrice, invalidateRenewalPriceCache (~693 tok)
 - `upload-sheet.test.ts` — Mocks - use inline factories so vi.fn() references are valid (not hoisted) (~7086 tok)
 - `upload-sheet.ts` — Exports REQUIRED_DOC_TYPES, OPTIONAL_DOC_TYPES, DocType, UploadStatus + 4 more (~7879 tok)
 
@@ -186,7 +181,7 @@
 - `health.test.ts` — Mock Stripe — control products.list behaviour per test. (~2417 tok)
 - `health.ts` — Exports GET (~1331 tok)
 - `session-info.ts` — API routes: GET (1 endpoints) (~342 tok)
-- `stripe-webhook.test.ts` — --------------------------------------------------------------------------- (~5897 tok)
+- `stripe-webhook.test.ts` — Mock external dependencies (~5897 tok)
 - `stripe-webhook.ts` — Option C (mode=payment): (~5076 tok)
 
 ## src/pages/api/professional/
@@ -203,11 +198,11 @@
 ## src/pages/api/renew/
 
 - `checkout-am.test.ts` — VALID_BODY: call (~1315 tok)
-- `checkout-am.ts` — Exports POST. AM ($75) renewal checkout endpoint — Stripe Checkout Session for Associate Member renewal. (~1207 tok)
+- `checkout-am.ts` — Exports POST (~1207 tok)
 - `checkout-pm.test.ts` — VALID_BODY: call (~1963 tok)
-- `checkout-pm.ts` — Exports POST. PM ($150) renewal checkout endpoint — Stripe Checkout Session for Professional Member renewal with PD form metadata. (~1490 tok)
+- `checkout-pm.ts` — Exports POST (~1490 tok)
 - `session-info.test.ts` — mockStripeSessionsRetrieve: call (~539 tok)
-- `session-info.ts` — API routes: GET (1 endpoints). Returns Stripe session metadata for /renew/success page hydration. (~414 tok)
+- `session-info.ts` — API routes: GET (1 endpoints) (~414 tok)
 
 ## src/pages/professional/
 
@@ -218,9 +213,9 @@
 
 ## src/pages/renew/
 
-- `associate.astro` — Astro: associate. AM renewal page — Associate Member ($75) minimal form (identity + Pay button, no PD). (~1337 tok)
-- `pro.astro` — Astro: pro. PM renewal page — Professional Member ($150) form with Professional Development entry collection, identity fields, and Pay button. (~2841 tok)
-- `success.astro` — Astro: success. Renewal success page — confirms Stripe checkout completion, hydrates from /api/renew/session-info. (~462 tok)
+- `associate.astro` — Astro: associate (~1337 tok)
+- `pro.astro` — Astro: pro (~2841 tok)
+- `success.astro` — Astro: success (~462 tok)
 
 ## src/styles/
 
