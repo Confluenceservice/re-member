@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for eldaa on 2026-03-23T18:33:46+13:00
+# fly.toml app configuration for the re-member blueprint
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'eldaa'
+app = 'remember-staging'
 primary_region = 'syd'
 
 [build]

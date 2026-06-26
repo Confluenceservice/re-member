@@ -1,10 +1,12 @@
-# ELDAA Membership Platform
+# Re:Member — Membership Platform Blueprint
 
 Membership + onboarding + renewal stack for volunteer-run orgs. Stripe-backed. Sheets-as-DB. Built for not-for-profits and small membership clubs whose admin time is precious and whose treasurer shouldn't spend weekends chasing forms and receipts.
 
+> **Before deploying:** read [`docs/CUSTOMIZE.md`](docs/CUSTOMIZE.md). The blueprint ships with sample form content from a single professional-membership org; you must replace it before real applicants.
+
 ## What it does
 
-End-to-end member lifecycle for ELDAA (and any similar professional/associate membership org):
+End-to-end member lifecycle for Re:Member (and any similar professional/associate membership org):
 
 - **Associate membership signup** — one-page checkout, Stripe-hosted payment.
 - **Professional membership application** — 8-step digital form (about you, training, experience, core competencies, referees, declarations), multi-file document upload (training certs, ethics, criminal check, advance care, assisted dying, palliative care, insurance), resume-by-link, autosave, admin review via auto-generated Google Doc.
@@ -21,9 +23,9 @@ No-CMS. Sheets-as-DB. Drive-as-DMS. Volunteer admin runs it from the spreadsheet
 - **Stripe Checkout / hosted Payment Links** for payments
 - **Google Sheets** as the system of record (`Professional Applications`, `Renewals`, `Checkout Log`, `Email Log`)
 - **Google Drive** for uploaded applicant documents + generated review Docs
-- **Google Service Account + Domain-Wide Delegation** (`it-admin@eldaa.org.nz`) for all Workspace access
+- **Google Service Account + Domain-Wide Delegation** (`it-admin@example.com`) for all Workspace access
 - **Mailgun** transactional email (resume links, PD log notifications, admin alerts)
-- **Fly.io** hosting (staging `eldaa.fly.dev`, production `subscribe.eldaa.org.nz`)
+- **Fly.io** hosting (staging `remember-staging.fly.dev`, production `subscribe.example.com`)
 - **Cloudflare Worker** cron for `/api/health` alerting → Slack
 - **Vitest** for unit tests
 
@@ -77,15 +79,15 @@ No-CMS. Sheets-as-DB. Drive-as-DMS. Volunteer admin runs it from the spreadsheet
 
 ### Mailgun (transactional email)
 - `MAILGUN_API_KEY` — private API key (`key-…`)
-- `MAILGUN_DOMAIN` — verified sending domain (e.g. `mg.eldaa.org.nz`)
-- `MAILGUN_FROM` — full From header (e.g. `ELDAA <no-reply@mg.eldaa.org.nz>`)
+- `MAILGUN_DOMAIN` — verified sending domain (e.g. `mg.example.com`)
+- `MAILGUN_FROM` — full From header (e.g. `Re:Member <no-reply@mg.example.com>`)
 
 Ops runbook: `docs/runbooks/mailgun-setup.md`
 
 ### Google Workspace (Sheets, Drive, Docs)
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL` — SA email
 - `GOOGLE_SERVICE_ACCOUNT_KEY` — SA private key (PEM)
-- `GOOGLE_WORKSPACE_IMPERSONATE_USER` — DWD subject (e.g. `it-admin@eldaa.org.nz`)
+- `GOOGLE_WORKSPACE_IMPERSONATE_USER` — DWD subject (e.g. `it-admin@example.com`)
 - `GOOGLE_SHEETS_ID` — `Professional Applications` spreadsheet
 - `GOOGLE_DRIVE_APPLICATIONS_FOLDER_ID` — parent folder for PM/AM Applications
 - `GOOGLE_DRIVE_REVIEW_DOCS_FOLDER_ID` — destination for auto-generated review Docs (falls back to applications folder)
@@ -93,15 +95,15 @@ Ops runbook: `docs/runbooks/mailgun-setup.md`
 Setup runbook: `docs/runbooks/google-workspace-domain-wide-delegation.md`
 
 ### App
-- `PUBLIC_APP_URL` — public base URL for outbound email links (e.g. `https://subscribe.eldaa.org.nz`)
+- `PUBLIC_APP_URL` — public base URL for outbound email links (e.g. `https://subscribe.example.com`)
 - `STAGING_PREFIX` — `testing-` on staging Fly only; isolates top-level Drive folder names
 - `CHECKOUT_DRY_RUN` — `true` validates Stripe config without creating sessions (great for staging + key rotation)
 - `SLACK_WEBHOOK_URL` — destination for health-check alerts
 
 ## Stripe webhook endpoints
 
-- Staging (`eldaa`): `https://eldaa.fly.dev/api/stripe-webhook`
-- Production (`eldaa-production`): `https://subscribe.eldaa.org.nz/api/stripe-webhook`
+- Staging (`remember`): `https://remember-staging.fly.dev/api/stripe-webhook`
+- Production (`remember-production`): `https://subscribe.example.com/api/stripe-webhook`
 
 If a payment succeeded while the webhook URL was wrong, correct it in Stripe and replay `checkout.session.completed` to backfill side effects.
 
@@ -113,4 +115,4 @@ If a payment succeeded while the webhook URL was wrong, correct it in Stripe and
 - **No Stripe Subscription for renewals** — one-time payment only. Stripe-hosted Payment Links would be simpler; `/renew/*` flow exists for pre-fill via URL params.
 - **Per-applicant serialisation** — `apply.ts` + `upload-file.ts` use a `Map<string, Promise<void>>` keyed by applicantId to chain read-modify-write operations. Mirror this pattern in any new endpoint that mutates a single applicant.
 - **Token-first resume** — `resume_token` is the primary applicant identifier; email is fallback only. Email gets header-injection-safe validation before use.
-- **Health-check alerting** — Fly checks don't notify. Cloudflare Worker (`eldaa-health-alert`) cron pings `/api/health` and posts to Slack on failure.
+- **Health-check alerting** — Fly checks don't notify. Cloudflare Worker (`remember-health-alert`) cron pings `/api/health` and posts to Slack on failure.

@@ -24,15 +24,20 @@ export function getStagingPrefix(): string {
  *
  * Resolution order:
  *   1. PUBLIC_APP_URL — explicit override (preferred for staging/prod split)
- *   2. STAGING_PREFIX set → https://subscribe-test.eldaa.org.nz (staging)
- *   3. fallback → https://subscribe.eldaa.org.nz (production)
+ *   2. STAGING_PREFIX set → staging URL pattern (override via STAGING_APP_URL)
+ *   3. fallback → production URL (override via PROD_APP_URL, else https://example.com)
  *
  * Production keeps no env vars. Staging sets only STAGING_PREFIX=testing-
  * and gets the staging URL automatically. Setting PUBLIC_APP_URL wins.
  */
+const DEFAULT_PROD_APP_URL = "https://example.com";
+const DEFAULT_STAGING_APP_URL = "https://staging.example.com";
+
 export function getPublicAppUrl(): string {
   const explicit = process.env.PUBLIC_APP_URL?.trim();
   if (explicit) return explicit;
-  if (getStagingPrefix()) return "https://subscribe-test.eldaa.org.nz";
-  return "https://subscribe.eldaa.org.nz";
+  if (getStagingPrefix()) {
+    return process.env.STAGING_APP_URL?.trim() || DEFAULT_STAGING_APP_URL;
+  }
+  return process.env.PROD_APP_URL?.trim() || DEFAULT_PROD_APP_URL;
 }

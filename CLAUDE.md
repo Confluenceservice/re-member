@@ -5,17 +5,53 @@
 This project uses OpenWolf for context management. Read and follow .wolf/OPENWOLF.md every session. Check .wolf/cerebrum.md before generating code. Check .wolf/anatomy.md before reading files.
 
 
-# Professional Membership — Phase 2: Digital Form + Multi-File Upload
+# Re:Member — Blueprint Membership Platform
 
-**Date:** 2026-04-19
-**Last Updated:** 2026-05-22
-**Status:** Active
+A neutral Astro + Stripe + Google-Workspace membership platform blueprint. Fork it, customise the sample data and env vars, deploy. Out of the box it ships with sample form content from a professional-membership org; see `docs/CUSTOMIZE.md` before deploying to a real org.
+
+**You are connected to Cognee Cloud** (memory). See `CLAUDE.md` later in this file for the project's connection details — those are project-agnostic and not ELDAA-specific.
 
 ---
 
-## Overview
+## What this repo is
 
-Professional Membership applicants complete a structured digital form (8-step wizard) and upload supporting documents. The form supports multi-session completion (resume via link), gates submission until all requirements are met, and transitions to Stripe payment upon completion.
+End-to-end member lifecycle for a small membership org:
+
+- **Associate membership signup** — one-page Stripe checkout.
+- **Professional membership application** — 8-step wizard with multi-file document upload, autosave, resume-by-token, admin review via auto-generated Google Doc.
+- **Annual renewal** — two tiers, one-time payment, hosted Payment Links.
+- **PD (professional development) logging** — members log PD entries post-renewal; admins notified.
+- **Post-payment side effects** — webhook → Sheets logging + Doc review + resume-link emails.
+- **Health check + alerting** — `/api/health` probes Stripe + email; Cloudflare Worker cron posts failures to Slack.
+
+Sheets-as-DB. Drive-as-DMS. No CMS. Volunteer admin runs it from the spreadsheet.
+
+## Stack
+
+Astro SSR · TypeScript · Tailwind · Stripe Checkout · Google Sheets/Drive/Docs (SA + DWD) · Mailgun / Gmail · Fly.io · Cloudflare Worker · Vitest.
+
+## Quick start
+
+1. `npm install`
+2. `cp .env.example .env` — fill in. See `docs/CUSTOMIZE.md`.
+3. `npm run dev`
+4. `npm run test`
+5. `npm run check`
+
+## Before deploying
+
+**Read `docs/CUSTOMIZE.md`.** The blueprint ships with sample data from a single professional-membership org. Before you point it at real applicants you must:
+
+- Set `ORG_NAME`, `SUPPORT_EMAIL`, `ADMIN_EMAIL`, `PUBLIC_ORG_URL`.
+- Replace Fly app names in `fly.toml` + `.github/workflows/*` (currently `remember-staging` / `remember-production`).
+- Replace the Cloudflare Worker name + `REMEMBER_HEALTH_ALERT_URL` repo var.
+- Swap the sample form content (21 competencies, 8 declarations, 6 doc types, $ amounts) — or implement the schema-abstraction plan that lives in `docs/superpowers/plans/` (planned, not shipped).
+
+---
+
+# Reference (code-accurate as of 2026-06-26)
+
+The sections below describe the application surface as it exists in code. They are org-agnostic and survive the sample-data swap.
 
 ## Essential Current State
 
@@ -49,7 +85,7 @@ new → partial → complete → paid
 | Doc Type | Description | Required |
 |----------|-------------|----------|
 | `training` | Certificates of training (may be multiple) | Yes |
-| `ethics` | Signed ELDAA Code of Ethics and Scope of Practice | Yes |
+| `ethics` | Signed Re:Member Code of Ethics and Scope of Practice | Yes |
 | `criminal` | Ministry of Justice criminal record check | Yes |
 | `advance_care` | Advanced Care Planning NZ (4 modules) | Yes |
 | `assisted_dying` | Assisted Dying online training (Te Whatu Ora, 3 modules) | Yes |
@@ -98,8 +134,8 @@ Returns: `{ url }` or `{ error, code, retryable? }`
 Receives Stripe events for checkout completion, subscription setup, and post-payment side effects.
 
 Environment URL mapping:
-- Staging (`eldaa`): `https://eldaa.fly.dev/api/stripe-webhook`
-- Production (`eldaa-production`): `https://subscribe.eldaa.org.nz/api/stripe-webhook`
+- Staging (`remember`): `https://remember-staging.fly.dev/api/stripe-webhook`
+- Production (`remember-production`): `https://subscribe.example.com/api/stripe-webhook`
 
 If the webhook URL was wrong during a successful payment, correct it in Stripe and replay `checkout.session.completed`.
 

@@ -27,11 +27,11 @@ function getEmailSubjectPrefix(): string {
 //
 // Env contract:
 //   MAILGUN_API_KEY   — Mailgun private API key (starts with "key-")
-//   MAILGUN_DOMAIN    — verified sending domain (e.g. "mg.eldaa.org.nz").
+//   MAILGUN_DOMAIN    — verified sending domain (e.g. "mg.example.com").
 //                       On a Mailgun sandbox this is the sandbox hostname;
 //                       only verified recipients will receive mail.
 //   MAILGUN_FROM      — full From header value, e.g.
-//                       "ELDAA <no-reply@mg.eldaa.org.nz>"
+//                       "Re:Member <no-reply@mg.example.com>"
 
 function getMailgunConfig(): {
   apiKey: string;
@@ -49,6 +49,17 @@ function getMailgunConfig(): {
   }
 
   return { apiKey, domain, from };
+}
+
+// Org identity — read once at call time so tests can monkey-patch env.
+function getOrgName(): string {
+  return process.env.ORG_NAME?.trim() || "Re:Member";
+}
+function getSupportEmail(): string {
+  return process.env.SUPPORT_EMAIL?.trim() || "membership@example.com";
+}
+function getOrgUrl(): string {
+  return process.env.PUBLIC_ORG_URL?.trim() || "https://example.com";
 }
 
 let _client: ReturnType<Mailgun["client"]> | null = null;
@@ -113,16 +124,17 @@ export async function sendProfessionalConfirmation(
   fullName: string,
   applicantId?: string,
 ): Promise<void> {
-  const subject = "Your ELDAA Professional Membership Application";
+  const orgName = getOrgName();
+  const subject = `Your ${orgName} Professional Membership Application`;
 
   const body = `Dear ${fullName},
 
-Thank you for your application to become a Professional Member of ELDAA. We will process your application and get back to you as soon as we can.
+Thank you for your application to become a Professional Member of ${orgName}. We will process your application and get back to you as soon as we can.
 
 We look forward to seeing you soon.
 
-Kia ora,
-ELDAA Committee`;
+Kind regards,
+The ${orgName} Committee`;
 
   await sendEmail(
     { to: toEmail, subject, body },
@@ -136,37 +148,40 @@ export async function sendAssociateConfirmation(
   listOnPage: boolean,
   associateApplicationId?: string,
 ): Promise<void> {
+  const orgName = getOrgName();
+  const support = getSupportEmail();
+  const orgUrl = getOrgUrl();
   const listNote = listOnPage
     ? "You have requested to be listed on our Associate Member list on our website — we will process that shortly."
-    : "You have not requested to be listed at this time. If you would like to be added in future, please email us at membership@eldaa.org.nz.";
+    : `You have not requested to be listed at this time. If you would like to be added in future, please email us at ${support}.`;
 
-  const subject = "Welcome to ELDAA — Associate Membership Confirmed";
+  const subject = `Welcome to ${orgName} — Associate Membership Confirmed`;
 
-  const body = `Welcome to ELDAA ☺
+  const body = `Welcome to ${orgName} ☺
 
 Dear ${fullName},
 
-We would like to officially welcome you on board the End of Life Doula Alliance of Aotearoa as an Associate Member. We are delighted you are joining us in this role, and look forward to supporting you in your mahi.
+We would like to officially welcome you on board as an Associate Member. We are delighted you are joining us in this role.
 
 ${listNote}
 
-Associate Member Resources: Access your resources at https://eldaa.org.nz — Members Area — Members Login. If you haven't signed up yet, click 'Sign up' and we will approve your access. If you're already a member, click 'Log In'.
+Associate Member Resources: Access your resources at ${orgUrl} — Members Area — Members Login. If you haven't signed up yet, click 'Sign up' and we will approve your access. If you're already a member, click 'Log In'.
 
 You will find recordings of our educational sessions and other relevant information there.
 
-Meetings: We look forward to seeing you at our membership meetings — this is a great way to connect with your peers. We hold educational sessions (all members — last Monday of the month) and, every other month, a confidential meetup for professional members only (last Tuesday of the month). We send out links prior to each meeting.
+Meetings: We look forward to seeing you at our membership meetings — this is a great way to connect with your peers. Details are circulated to members in advance.
 
-Networking: We encourage you to connect with others in your area through our Doula hubs. Please reach out to any of us at any time if you need support — we are here for each other.
+Networking: We encourage you to connect with others in your area. Please reach out to any of us at any time if you need support — we are here for each other.
 
-Questions? Email us at membership@eldaa.org.nz — we would love your feedback and any ideas you have to support you in your mahi.
+Questions? Email us at ${support} — we would love your feedback and any ideas you have to support you.
 
 Again, welcome on board ☺
 
-Kia ora,
-ELDAA Committee`;
+Kind regards,
+The ${orgName} Committee`;
 
   await sendEmail(
-    { to: toEmail, subject, body, replyTo: "membership@eldaa.org.nz" },
+    { to: toEmail, subject, body, replyTo: support },
     { template: "associate_confirmation", applicantId: associateApplicationId },
   );
 }
@@ -177,6 +192,7 @@ export async function sendAssociateApplicationNotification(
   docUrl: string,
   associateApplicationId?: string,
 ): Promise<void> {
+  const orgName = getOrgName();
   const subject = `New Associate Membership Application — ${associateName}`;
 
   const body = `A new associate membership application has been received and the review document is ready.
@@ -186,7 +202,7 @@ Review document: ${docUrl}
 
 Please log in to review the application and continue the membership process.
 
-ELDAA`;
+${orgName}`;
 
   await sendEmail(
     { to: toEmail, subject, body },
@@ -200,6 +216,7 @@ export async function sendProfessionalApplicationNotification(
   docUrl: string,
   applicantId?: string,
 ): Promise<void> {
+  const orgName = getOrgName();
   const subject = `New Professional Membership Application — ${applicantName}`;
 
   const body = `A new professional membership application has been received and the review document is ready.
@@ -209,7 +226,7 @@ Review document: ${docUrl}
 
 Please log in to review the application and continue the membership process.
 
-ELDAA`;
+${orgName}`;
 
   await sendEmail(
     { to: toEmail, subject, body },
@@ -223,11 +240,13 @@ export async function sendRenewalPdLogLink(
   pdLogLink: string,
   renewalId?: string,
 ): Promise<void> {
-  const subject = "Log your Professional Development — ELDAA Membership Renewal";
+  const orgName = getOrgName();
+  const support = getSupportEmail();
+  const subject = `Log your Professional Development — ${orgName} Membership Renewal`;
 
   const body = `Dear ${fullName},
 
-Thank you for renewing your ELDAA Professional Membership.
+Thank you for renewing your ${orgName} Professional Membership.
 
 As a reminder, Professional Members are required to log at least 10 hours of Professional Development each year. You can log your PD activities at any time using the link below:
 
@@ -235,11 +254,11 @@ ${pdLogLink}
 
 Please keep this email — it's your personal link to update your PD record.
 
-Kia ora,
-ELDAA Committee`;
+Kind regards,
+The ${orgName} Committee`;
 
   await sendEmail(
-    { to: toEmail, subject, body, replyTo: "membership@eldaa.org.nz" },
+    { to: toEmail, subject, body, replyTo: support },
     { template: "renewal_pd_log", applicantId: renewalId },
   );
 }
@@ -250,11 +269,12 @@ export async function sendResumeLink(
   resumeLink: string,
   applicantId?: string,
 ): Promise<void> {
-  const subject = "Your ELDAA Professional Membership Application";
+  const orgName = getOrgName();
+  const subject = `Your ${orgName} Professional Membership Application`;
 
   const body = `Dear ${fullName},
 
-Thank you for starting your Professional Membership application with ELDAA.
+Thank you for starting your Professional Membership application with ${orgName}.
 
 To continue your application, please click the link below:
 ${resumeLink}
@@ -264,7 +284,7 @@ This link will allow you to upload your required documents and complete your app
 If you did not start this application, please ignore this email.
 
 Best regards,
-ELDAA`;
+${orgName}`;
 
   await sendEmail(
     { to: toEmail, subject, body },
@@ -281,6 +301,8 @@ export async function sendRenewalAdminNotification(
   amountPaidCents: number,
   sheetUrl?: string,
 ): Promise<void> {
+  const orgName = getOrgName();
+  const support = getSupportEmail();
   const tierLabel = tier === "pm" ? "Professional Member" : "Associate Member";
   const amount = (amountPaidCents / 100).toFixed(2);
   const subject = `Membership renewal completed — ${memberName} (${tierLabel})`;
@@ -296,10 +318,10 @@ ${sheetUrl ? `Renewals sheet: ${sheetUrl}` : ""}
 
 The member has been emailed a link to log their Professional Development activities (PM only).
 
-ELDAA`;
+${orgName}`;
 
   await sendEmail(
-    { to: toEmail, subject, body, replyTo: "membership@eldaa.org.nz" },
+    { to: toEmail, subject, body, replyTo: support },
     { template: "renewal_admin_notification", applicantId: renewalId },
   );
 }

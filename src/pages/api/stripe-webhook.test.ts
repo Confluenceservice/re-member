@@ -327,7 +327,7 @@ describe("stripe-webhook", () => {
         "assoc_app_456"
       );
       expect(mockSendAssociateApplicationNotification).toHaveBeenCalledWith(
-        "admin@eldaa.org.nz",
+        "admin@example.com",
         "Bob Smith",
         "https://docs.google.com/document/d/assoc123",
         "assoc_app_456"
@@ -479,7 +479,7 @@ describe("stripe-webhook", () => {
         })
       );
       expect(mockSendRenewalAdminNotification).toHaveBeenCalledWith(
-        "admin@eldaa.org.nz",
+        "admin@example.com",
         "pm",
         "Alice Smith",
         "alice@example.com",

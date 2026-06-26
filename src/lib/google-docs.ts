@@ -109,7 +109,7 @@ function buildAssociateContent(data: AssociateApplicationData) {
     insert("\n");
   }
 
-  h1("ELDAA Associate Membership Application");
+  h1("Re:Member Associate Membership Application");
   gap();
 
   h2("Applicant Details");
@@ -125,7 +125,7 @@ function buildAssociateContent(data: AssociateApplicationData) {
   gap();
 
   h2("Additional Information");
-  p(`Interest in Joining ELDAA: ${data.interestJoining}`);
+  p(`Interest in Joining Re:Member: ${data.interestJoining}`);
   p(`Training Details: ${data.trainingDetails}`);
   p(`List on Associate Members Page: ${data.listOnPage === "yes" ? "Yes" : data.listOnPage === "no" ? "No" : "—"}`);
   if (data.listOnPage === "yes" && data.listingDetails) {
@@ -252,7 +252,7 @@ function buildContent(applicant: ApplicantInfo, driveFiles: DriveFile[]) {
   }
 
   // Title
-  h1("ELDAA Professional Membership Application");
+  h1("Re:Member Professional Membership Application");
   gap();
 
   // Applicant Details
@@ -311,9 +311,9 @@ function buildContent(applicant: ApplicantInfo, driveFiles: DriveFile[]) {
     agreeInterview: "Agrees to an interview by committee members",
     commitProfessionalDev: "Commits to 10 hours professional development/year",
     willInsurance: "Will take out professional indemnity insurance",
-    listDirectory: "Wishes to be listed in ELDAA directory",
+    listDirectory: "Wishes to be listed in Re:Member directory",
     provideCriminalCheck: "Willing to provide Ministry of Justice criminal record check",
-    attendMeetings: "Willing to attend regular ELDAA meetings and events",
+    attendMeetings: "Willing to attend regular Re:Member meetings and events",
     workRemotely: "Willing to work remotely where no other Professional Member available",
   };
   try {

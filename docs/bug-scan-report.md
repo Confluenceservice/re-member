@@ -15,7 +15,7 @@ Status: Fixed (2026-06-12). Email verification via the resume link now gates the
 
 The `POST` "resume by email" branch used to defeat the token capability model. With no `token` but an `email` matching an existing applicant (`getApplicantByEmail`), the handler updated that row and returned a `resumeLink` containing the real `resumeToken`:
 
-```ts path=/Users/thomasb/eldaa/src/pages/api/professional/apply.ts start=235
+```ts path=/Users/thomasb/remember/src/pages/api/professional/apply.ts start=235
 const tokenForResumeLink = existingApplicant.resumeToken || resumeToken;
 const resumeLink = `${siteBaseUrl}/professional/apply?token=${tokenForResumeLink}`;
 return Response.json({ success: true, resumeLink, applicantId: existingApplicant.id, existing: true });
@@ -49,7 +49,7 @@ Fix: reject early when the `Content-Length` header exceeds `MAX_FILE_SIZE`.
 
 Uploaded filenames are injected unescaped:
 
-```js path=/Users/thomasb/eldaa/src/pages/professional/apply.astro start=1097
+```js path=/Users/thomasb/remember/src/pages/professional/apply.astro start=1097
 <span class="text-sm">${f.filename}</span>
 ```
 

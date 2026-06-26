@@ -46,7 +46,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       messageEl!.textContent = `Thank you${name}! Your Professional Membership payment was successful.`;
       formLinkText!.textContent = "Next step:";
       formLinkEl!.textContent = "Complete your Professional Membership application";
-      formLinkEl!.href = "https://www.eldaa.org.nz/professional-membership";
+      formLinkEl!.href = "https://www.example.com/professional-membership";
       nextStepsEl!.classList.remove("hidden");
       countdownEl!.classList.remove("hidden");
       countdownEl!.textContent = "Redirecting in 4 seconds...";
@@ -55,23 +55,23 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         count--;
         if (count <= 0) {
           clearInterval(timer);
-          window.location.href = "https://www.eldaa.org.nz/professional-membership";
+          window.location.href = "https://www.example.com/professional-membership";
         } else {
           countdownEl!.textContent = `Redirecting in ${count} second${count === 1 ? "" : "s"}...`;
         }
       }, 1000);
     } else {
       messageEl!.textContent = "Thank you. Your subscription checkout completed successfully.";
-      formLinkText!.textContent = "Return to the ELDAA website:";
-      formLinkEl!.textContent = "eldaa.org.nz/membership";
-      formLinkEl!.href = "https://www.eldaa.org.nz/membership";
+      formLinkText!.textContent = "Return to the Re:Member website:";
+      formLinkEl!.textContent = "example.com/membership";
+      formLinkEl!.href = "https://www.example.com/membership";
       nextStepsEl!.classList.remove("hidden");
     }
   } catch {
     messageEl!.textContent = "Thank you. Your subscription checkout completed successfully.";
-    formLinkText!.textContent = "Return to the ELDAA website:";
-    formLinkEl!.textContent = "eldaa.org.nz/membership";
-    formLinkEl!.href = "https://www.eldaa.org.nz/membership";
+    formLinkText!.textContent = "Return to the Re:Member website:";
+    formLinkEl!.textContent = "example.com/membership";
+    formLinkEl!.href = "https://www.example.com/membership";
     nextStepsEl!.classList.remove("hidden");
   }
 </script>

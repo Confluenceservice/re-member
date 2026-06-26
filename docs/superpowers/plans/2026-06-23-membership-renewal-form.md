@@ -25,10 +25,10 @@
 **Add Fly secrets** (only if not already set on the app):
 
 ```bash
-fly secrets set STRIPE_PRICE_PROFESSIONAL=price_1TTFkhCi50x7UA8b51G5y4TQ --app eldaa
-fly secrets set STRIPE_PRICE_ASSOCIATE=price_1TTFjrCi50x7UA8b6rursmWq --app eldaa
-fly secrets set STRIPE_PRICE_PROFESSIONAL=price_1TTFkhCi50x7UA8b51G5y4TQ --app eldaa-production
-fly secrets set STRIPE_PRICE_ASSOCIATE=price_1TTFjrCi50x7UA8b6rursmWq --app eldaa-production
+fly secrets set STRIPE_PRICE_PROFESSIONAL=price_1TTFkhCi50x7UA8b51G5y4TQ --app remember
+fly secrets set STRIPE_PRICE_ASSOCIATE=price_1TTFjrCi50x7UA8b6rursmWq --app remember
+fly secrets set STRIPE_PRICE_PROFESSIONAL=price_1TTFkhCi50x7UA8b51G5y4TQ --app remember-production
+fly secrets set STRIPE_PRICE_ASSOCIATE=price_1TTFjrCi50x7UA8b6rursmWq --app remember-production
 ```
 
 **Local env** (`.env.local`):
@@ -2185,7 +2185,7 @@ Expected: build succeeds.
 
 1. Confirm Stripe prices exist with correct `lookup_keys` (per Pre-flight).
 2. Confirm `STRIPE_PRODUCT_*_RENEWAL` Fly secrets are set (per Pre-flight).
-3. Open `https://eldaa.fly.dev/renew/pro?firstName=Test&lastName=User&email=test@example.com&phone=021234567&year=2026`.
+3. Open `https://remember-staging.fly.dev/renew/pro?firstName=Test&lastName=User&email=test@example.com&phone=021234567&year=2026`.
 4. Verify pre-fill. Fill 1 PD row. Submit.
 5. Verify `Renewals` sheet has new row with `payment_status: "pending"`, `stripe_session` empty.
 6. Use Stripe test card `4242 4242 4242 4242`. Complete checkout.
@@ -2230,7 +2230,7 @@ git commit -m "chore(openwolf): track new renewal files + decisions"
 git push origin main
 ```
 
-CI deploys to `eldaa.fly.dev` automatically. Smoke-test the renewal pages there.
+CI deploys to `remember-staging.fly.dev` automatically. Smoke-test the renewal pages there.
 
 - [ ] **Step 8: Production deploy**
 
@@ -2242,7 +2242,7 @@ gh workflow run fly-deploy.yml --ref main
 
 Or manually:
 ```bash
-fly deploy --remote-only --app eldaa-production
+fly deploy --remote-only --app remember-production
 ```
 
 Confirm `STRIPE_PRODUCT_*_RENEWAL` secrets are set on production app (per Pre-flight).

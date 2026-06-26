@@ -1,4 +1,4 @@
-name = "eldaa-health-alert"
+name = "remember-health-alert"
 main = "worker.mjs"
 compatibility_date = "2024-09-23"
 

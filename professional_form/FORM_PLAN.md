@@ -16,7 +16,7 @@ Professional Membership applicants complete a structured digital form and upload
 | Doc Type | Description | Required |
 |----------|-------------|----------|
 | `training` | Certificates of training (may be multiple) | Yes |
-| `ethics` | Signed ELDAA Code of Ethics and Scope of Practice | Yes |
+| `ethics` | Signed Re:Member Code of Ethics and Scope of Practice | Yes |
 | `criminal` | Ministry of Justice criminal record check | Yes |
 | `advance_care` | Advanced Care Planning NZ (4 modules) | Yes |
 | `assisted_dying` | Assisted Dying online training (Te Whatu Ora, 3 modules) | Yes |
@@ -48,7 +48,7 @@ Professional Membership applicants complete a structured digital form and upload
 | Course: Provider | text | Yes |
 | Course: Year Completed | text (year) | Yes |
 | Additional courses | repeat rows | No |
-| Non-ELDAA provider curriculum outline | file upload | Conditional (if applicable) |
+| Non-Re:Member provider curriculum outline | file upload | Conditional (if applicable) |
 
 ### Section: "Your EOL Doula Experience"
 | Field | Type | Required |
@@ -67,7 +67,7 @@ Professional Membership applicants complete a structured digital form and upload
 - Will you take out professional indemnity insurance? (recommended)
 - Do you wish to be listed as a practicing End of Life Doula in our directory?
 - Are you willing to provide a current Ministry of Justice criminal record check?
-- Are you willing to attend regular ELDAA meetings and events, and engage with and support your local ELDAA community?
+- Are you willing to attend regular Re:Member meetings and events, and engage with and support your local Re:Member community?
 - Are you willing to work remotely where there is no other available Professional Member in a Client's area?
 
 ### Section: "EOL Doula Standards & Core Competencies"
@@ -93,7 +93,7 @@ Professional Membership applicants complete a structured digital form and upload
 18. Body care and After Death care
 19. Grief & Bereavement Awareness
 20. Interdisciplinary Collaboration
-21. Mentorship — willing to mentor other ELDAA members
+21. Mentorship — willing to mentor other Re:Member members
 
 ### Section: "Referees"
 | Field | Required |
@@ -111,7 +111,7 @@ Professional Membership applicants complete a structured digital form and upload
 | Field | Required |
 |-------|----------|
 | I confirm the information provided is accurate | Yes |
-| I have read and agree to the ELDAA Code of Ethics | Yes |
+| I have read and agree to the Re:Member Code of Ethics | Yes |
 | I have read and understand the Scope of Practice | Yes |
 | I agree to actively provide Doula Services | Yes |
 | I agree to an interview by the committee if required | Yes |

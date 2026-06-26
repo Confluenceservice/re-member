@@ -1,10 +1,24 @@
-// eldaa-health-alert (module worker)
+// remember-health-alert (module worker)
 // Triggered by GitHub Actions cron (every 5 min) via POST /check with bearer auth.
 // Pings the production /api/health endpoint, posts to Slack on failure.
+//
+// Targets are configured via env vars so this Worker can be reused by other
+// Re:Member deployments without code changes:
+//   TARGET_URL    — full URL of /api/health on the production Fly app
+//   TARGET_NAME   — display label for the Slack alert (default: "production")
+//   ORG_NAME      — org name shown in the Slack alert header (default: "Re:Member")
 
-const TARGETS = [
-  { name: "production", url: "https://subscribe.eldaa.org.nz/api/health", baseUrl: "https://subscribe.eldaa.org.nz/" },
-];
+function loadTargets(env) {
+  const url = env.TARGET_URL?.trim();
+  if (!url) return [];
+  let baseUrl;
+  try { baseUrl = new URL(url).origin + "/"; } catch { return []; }
+  return [{ name: env.TARGET_NAME?.trim() || "production", url, baseUrl }];
+}
+
+function orgName(env) {
+  return env.ORG_NAME?.trim() || "Re:Member";
+}
 
 // Timeouts: cold starts on Fly can exceed 10s (stopped machine + Node import
 // graph + Vite dev server in dev). Use a longer window for the warmup ping
@@ -29,7 +43,7 @@ async function check(target) {
   try {
     const warmup = await fetch(target.baseUrl, {
       signal: AbortSignal.timeout(WARMUP_TIMEOUT_MS),
-      headers: { "User-Agent": "eldaa-health-alert/1.0 (warmup)" },
+      headers: { "User-Agent": "remember-health-alert/1.0 (warmup)" },
     });
     // Drain body so the connection is released back to the pool.
     try { await warmup.text(); } catch {}
@@ -52,7 +66,7 @@ async function check(target) {
   try {
     const res = await fetch(target.url, {
       signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS),
-      headers: { "User-Agent": "eldaa-health-alert/1.0" },
+      headers: { "User-Agent": "remember-health-alert/1.0" },
     });
     const body = await res.json();
     return {
@@ -90,14 +104,14 @@ function summarizeResult(r) {
   };
 }
 
-async function postSlack(webhook, results) {
+async function postSlack(webhook, results, env) {
   const failed = results.filter((r) => !r.ok);
   if (failed.length === 0) return { sent: false, reason: "all_ok" };
 
   // An alert is needed but we can't deliver it — the monitor itself is broken.
   if (!webhook) return { sent: false, reason: "no_webhook" };
 
-  const headerText = `🚨 ELDAA health: ${failed.length}/${results.length} failing`;
+  const headerText = `🚨 ${orgName(env)} health: ${failed.length}/${results.length} failing`;
   const blocks = [
     { type: "header", text: { type: "plain_text", text: headerText } },
     ...failed.map((f) => ({
@@ -138,7 +152,7 @@ export default {
 
     if (request.method === "GET" && url.pathname === "/") {
       return new Response(
-        "eldaa-health-alert\n\nPOST /check with Authorization: Bearer <CHECK_TOKEN>\n",
+        "remember-health-alert\n\nPOST /check with Authorization: Bearer <CHECK_TOKEN>\n",
         { status: 200, headers: { "Content-Type": "text/plain" } },
       );
     }
@@ -151,8 +165,16 @@ export default {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const results = await Promise.all(TARGETS.map(check));
-    const slack = await postSlack(env.SLACK_WEBHOOK_URL, results);
+    const targets = loadTargets(env);
+    if (targets.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "TARGET_URL not configured" }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    const results = await Promise.all(targets.map(check));
+    const slack = await postSlack(env.SLACK_WEBHOOK_URL, results, env);
 
     // Return 502 when an alert was needed but couldn't be delivered, so the
     // GitHub Actions cron fails loudly instead of going green on a broken
