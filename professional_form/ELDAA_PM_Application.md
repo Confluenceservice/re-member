@@ -16,7 +16,7 @@
 
 Please record all End of Life Doula courses taken, followed by any other relevant training and attach certificates with your application email.
 
-Please note : If you have trained with a provider who is not a training partner of ELDAA, please also provide an outline of the course curriculum for our team to consider.
+Please note : If you have trained with a provider who is not a training partner of Re:Member, please also provide an outline of the course curriculum for our team to consider.
 
 |  |  |  |  |
 | --- | --- | --- | --- |
@@ -71,7 +71,7 @@ In addition, please provide 2–3 examples of your doula-related work (paid, vol
 
 Do you agree to actively provide Doula Services? Y/NDo you agree to an interview by one or more of our committee members? Y/N
 
-Do you agree to submit proof of up to 10 hours of professional development each year to keep your membership active? (This includes attendance at ELDAA meetings). Y/N
+Do you agree to submit proof of up to 10 hours of professional development each year to keep your membership active? (This includes attendance at Re:Member meetings). Y/N
 
 Will you take out professional indemnity insurance (recommended)? Y/N
 
@@ -79,7 +79,7 @@ Do you wish to be listed as a practicing End of Life Doula in our directory? Y/N
 
 Are you willing to provide a current Ministry of Justice criminal record check? Y/N
 
-Are you willing to attend regular ELDAA meetings and events, and engage with and support your local ELDAA community? Y/N
+Are you willing to attend regular Re:Member meetings and events, and engage with and support your local Re:Member community? Y/N
 
 ### Are you willing to work remotely where there is no other available Professional Member in a Client’s area? Y/N
 
@@ -111,7 +111,7 @@ Please complete the following questions:
 | 1. **Body care and After Death care** – Be knowledgeable and comfortable assisting families with after-death care, including washing, dressing, and cooling the body. |  |
 | 1. **Grief & Bereavement Awareness** – Offer compassionate support and connect to resources for grief, understanding different ways people process loss. |  |
 | 1. **Interdisciplinary Collaboration** – Working alongside medical, hospice, iwi/hapū, and community professionals. |  |
-| 1. **Mentorship –** Are you willing to mentor other ELDAA members from time to time where appropriate? |  |
+| 1. **Mentorship –** Are you willing to mentor other Re:Member members from time to time where appropriate? |  |
 
 **Referees** May we contact your referees? Y/N
 
@@ -127,7 +127,7 @@ Email & Phone:
 
 **To be attached to your application form:**
 
-* Signed ELDAA Code of Ethics and Scope of Practice.
+* Signed Re:Member Code of Ethics and Scope of Practice.
 * Certificates of training you have completed as per above.
 * Insurance certificate (if relevant).
 * Criminal records check. <https://www.justice.govt.nz/criminal-records/>
@@ -136,7 +136,7 @@ Email & Phone:
 
 **Date:**
 
-Please email your application, along with all documentation to membership@eldaa.org.nz.
+Please email your application, along with all documentation to membership@example.com.
 
 Payment is also required upon application. Please deposit $120 into this account:
 

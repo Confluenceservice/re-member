@@ -4,19 +4,19 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <BaseLayout
   title="Associate Membership Application"
-  description="Apply for Associate Membership with ELDAA."
+  description="Apply for Associate Membership with Re:Member."
 >
   <section class="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
     <a
-      href="https://www.eldaa.org.nz"
+      href="https://www.example.com"
       target="_blank"
       rel="noopener noreferrer"
       class="inline-block mb-3 sm:mb-4"
-      aria-label="ELDAA — visit eldaa.org.nz"
+      aria-label="Re:Member — visit example.com"
     >
       <img
         src="/logo.svg"
-        alt="ELDAA"
+        alt="Re:Member"
         class="h-14 sm:h-20 w-auto"
         width="357"
         height="144"
@@ -112,7 +112,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     <h2 class="m-0 text-xl font-semibold">Additional Information</h2>
 
     <div class="mt-4">
-      <label for="interestJoining" class="block font-semibold mb-1.5">What is your interest in joining ELDAA? *</label>
+      <label for="interestJoining" class="block font-semibold mb-1.5">What is your interest in joining Re:Member? *</label>
       <textarea
         id="interestJoining"
         name="interestJoining"
@@ -259,7 +259,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     if (!getVal(emailInput)) { setStatus("Enter your email address.", "error"); return false; }
     if (!getVal(phoneInput)) { setStatus("Enter your phone number.", "error"); return false; }
     if (!getVal(fullAddressInput)) { setStatus("Enter your full address.", "error"); return false; }
-    if (!getVal(interestJoiningInput)) { setStatus("Tell us your interest in joining ELDAA.", "error"); return false; }
+    if (!getVal(interestJoiningInput)) { setStatus("Tell us your interest in joining Re:Member.", "error"); return false; }
     if (!getVal(trainingDetailsInput)) { setStatus("Complete the End of Life Doula training question.", "error"); return false; }
 
     const listingChoice = getListingChoice();

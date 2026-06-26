@@ -1,4 +1,4 @@
-# Mailgun setup for ELDAA transactional email
+# Mailgun setup for Re:Member transactional email
 
 Replaces the previous Gmail OAuth path. Use this when standing up Mailgun
 for a new environment, rotating the API key, or moving from a sandbox
@@ -18,7 +18,7 @@ domain to a production verified domain.
 - A Mailgun account in the **US** region (uses `api.mailgun.net`).
   For EU accounts, switch the health probe URL in
   `src/pages/api/health.ts` to `https://api.eu.mailgun.net/v3/{domain}`.
-- A verified sending domain in Mailgun (e.g. `mg.eldaa.org.nz`).
+- A verified sending domain in Mailgun (e.g. `mg.example.com`).
   Sandbox domains look like `sandbox<id>.mailgun.org` and only deliver
   to recipients you've explicitly added in the Mailgun dashboard.
 
@@ -47,33 +47,33 @@ the domain in its dashboard once records resolve.
 ## 3) Roll the env vars to Fly
 
 ```sh
-fly secrets set -a eldaa \
+fly secrets set -a remember \
   MAILGUN_API_KEY=key-... \
-  MAILGUN_DOMAIN=mg.eldaa.org.nz \
-  MAILGUN_FROM="ELDAA <no-reply@mg.eldaa.org.nz>"
+  MAILGUN_DOMAIN=mg.example.com \
+  MAILGUN_FROM="Re:Member <no-reply@mg.example.com>"
 
-fly secrets set -a eldaa-production \
+fly secrets set -a remember-production \
   MAILGUN_API_KEY=key-... \
-  MAILGUN_DOMAIN=mg.eldaa.org.nz \
-  MAILGUN_FROM="ELDAA <no-reply@mg.eldaa.org.nz>"
+  MAILGUN_DOMAIN=mg.example.com \
+  MAILGUN_FROM="Re:Member <no-reply@mg.example.com>"
 ```
 
 Restart the running machine so the new secrets are injected:
 
 ```sh
-fly machine list -a eldaa
-fly machine stop <started-id> -a eldaa
+fly machine list -a remember
+fly machine stop <started-id> -a remember
 # next request cold-starts a fresh machine with the new env
 ```
 
 ## 4) Unset the old Gmail env vars (if migrating from a Gmail setup)
 
 ```sh
-fly secrets unset -a eldaa \
+fly secrets unset -a remember \
   GMAIL_OAUTH_CLIENT_ID GMAIL_OAUTH_CLIENT_SECRET \
   GMAIL_OAUTH_REFRESH_TOKEN GMAIL_SENDER_EMAIL
 
-fly secrets unset -a eldaa-production \
+fly secrets unset -a remember-production \
   GMAIL_OAUTH_CLIENT_ID GMAIL_OAUTH_CLIENT_SECRET \
   GMAIL_OAUTH_REFRESH_TOKEN GMAIL_SENDER_EMAIL
 ```
@@ -83,8 +83,8 @@ fly secrets unset -a eldaa-production \
 Health check — expect `email: connected`:
 
 ```sh
-curl -sS https://subscribe-test.eldaa.org.nz/api/health | python3 -m json.tool
-curl -sS https://subscribe.eldaa.org.nz/api/health | python3 -m json.tool
+curl -sS https://subscribe-test.example.com/api/health | python3 -m json.tool
+curl -sS https://subscribe.example.com/api/health | python3 -m json.tool
 ```
 
 End-to-end — trigger an email and confirm it arrives + the sheet audit
@@ -94,7 +94,7 @@ log gets a row:
 # In the apply form: start a no-token registration, then check the
 # recipient's inbox. Or for a faster test, use the apply endpoint with
 # an applicant ID that triggers a confirmation email.
-fly logs -a eldaa --no-tail | grep -E "Mailgun|email"
+fly logs -a remember --no-tail | grep -E "Mailgun|email"
 ```
 
 ## 6) Sandbox caveats
@@ -107,7 +107,7 @@ domain before rolling to production.
 
 ## 7) Deliverability — first sends go to Junk
 
-For a brand-new sending domain (`mg.eldaa.org.nz` on day 1), even
+For a brand-new sending domain (`mg.example.com` on day 1), even
 with **DKIM + SPF + DMARC all passing**, the first handful of sends
 to any recipient are likely to land in Junk. This is not a config
 issue — authentication headers and DNS records are independent of
@@ -131,19 +131,19 @@ Mitigations (in order of leverage):
 1. **Sender reputation** — the only durable fix. Volume of legitimate
    sends + recipient "Not Junk" + add to contacts builds the
    domain's reputation over days/weeks. No way to shortcut this.
-2. **From name** — use a recognisable brand ("ELDAA Membership
+2. **From name** — use a recognisable brand ("Re:Member Membership
    Notifications"), not "No Reply" or "noreply". Generic names are
    penalised by content classifiers.
 3. **List-Unsubscribe header** — RFC 8058. Optional for transactional
    but a positive signal for Gmail and Apple. Drop-in for
    `email-sender.ts`:
    ```ts
-   "h:List-Unsubscribe": "<mailto:unsubscribe@mg.eldaa.org.nz>",
+   "h:List-Unsubscribe": "<mailto:unsubscribe@mg.example.com>",
    "h:List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
    ```
 4. **Recipient training** — first time an applicant receives an
-   ELDAA email, ask them to mark "Not Junk" + add
-   `no-reply@mg.eldaa.org.nz` to contacts. This is a one-time ask
+   Re:Member email, ask them to mark "Not Junk" + add
+   `no-reply@mg.example.com` to contacts. This is a one-time ask
    that unblocks the rest of their journey.
 
 Magic-link auth messages are inherently shape-matched to phishing
@@ -155,12 +155,12 @@ defeat this on a new domain.
 
 ```sh
 # 1) Roll Gmail env vars back on
-fly secrets set -a eldaa \
+fly secrets set -a remember \
   GMAIL_OAUTH_CLIENT_ID=... GMAIL_OAUTH_CLIENT_SECRET=... \
   GMAIL_OAUTH_REFRESH_TOKEN=... GMAIL_SENDER_EMAIL=...
 
 # 2) Drop Mailgun vars
-fly secrets unset -a eldaa \
+fly secrets unset -a remember \
   MAILGUN_API_KEY MAILGUN_DOMAIN MAILGUN_FROM
 
 # 3) Revert the code change

@@ -75,7 +75,7 @@ async function handleCheckoutCompleted(
 
     // Notify admin (non-blocking, every renewal completion)
     {
-      const adminEmail = "admin@eldaa.org.nz";
+      const adminEmail = process.env.ADMIN_EMAIL?.trim() || "admin@example.com";
       const fullName = `${renewal.firstName} ${renewal.lastName}`.trim();
       const adminTier = renewal.tier === "am" ? "am" : "pm";
       const amountCents = renewal.amountPaidCents;
@@ -298,7 +298,7 @@ async function handleCheckoutCompleted(
   // Create a Google Doc review document for professional applications
   if (plan === "professional" && applicantId && professionalApplicant) {
     createApplicationReviewDoc(professionalApplicant).then(async (docUrl) => {
-      const membershipEmail = "membership@eldaa.org.nz";
+      const membershipEmail = process.env.SUPPORT_EMAIL?.trim() || "membership@example.com";
       const applicantFullName = `${professionalApplicant.firstName} ${professionalApplicant.lastName}`;
       sendProfessionalApplicationNotification(membershipEmail, applicantFullName, docUrl, applicantId).catch((err) => {
         const msg = err instanceof Error ? err.message : String(err);
@@ -368,7 +368,7 @@ async function handleCheckoutCompleted(
 
       // Send internal committee notification for AM
       sendAssociateApplicationNotification(
-        "admin@eldaa.org.nz",
+        process.env.ADMIN_EMAIL?.trim() || "admin@example.com",
         fullName,
         docUrl,
         associateApplicationId

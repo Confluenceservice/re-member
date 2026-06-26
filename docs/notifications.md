@@ -1,6 +1,6 @@
-# ELDAA Notifications
+# Re:Member Notifications
 
-> When and how ELDAA sends notifications to applicants and members.
+> When and how Re:Member sends notifications to applicants and members.
 
 ---
 
@@ -17,11 +17,11 @@
 **Template:** `sendResumeLink(toEmail, fullName, resumeLink, applicantId?)` in `src/lib/email-sender.ts`
 
 ```
-Subject: Your ELDAA Professional Membership Application
+Subject: Your Re:Member Professional Membership Application
 
 Dear {fullName},
 
-Thank you for starting your Professional Membership application with ELDAA.
+Thank you for starting your Professional Membership application with Re:Member.
 
 To continue your application, please click the link below:
 {resumeLink}
@@ -31,7 +31,7 @@ This link will allow you to upload your required documents and complete your app
 If you did not start this application, please ignore this email.
 
 Best regards,
-ELDAA
+Re:Member
 ```
 
 **Delivery:** Non-blocking — failures are logged but do not fail the application submission.
@@ -48,7 +48,7 @@ The following notifications are described in the UI but **not yet implemented**:
 |---|---|---|---|
 | Document verification confirmation | "You will receive confirmation once your documents have been verified" | `success-upload.astro` | Not implemented |
 | Membership activation confirmation | "You will receive confirmation once your membership has been activated" | `associate-membership.astro` | Not implemented |
-| Payment receipt | — | — | **Stripe handles it** — ELDAA passes `receipt_email` in the Checkout Session API call, which overrides Dashboard automatic receipt settings. Stripe sends its own branded receipt directly to that address. |
+| Payment receipt | — | — | **Stripe handles it** — Re:Member passes `receipt_email` in the Checkout Session API call, which overrides Dashboard automatic receipt settings. Stripe sends its own branded receipt directly to that address. |
 | Subscription renewal reminder | — | — | Not implemented |
 | Application review completion | — | — | Not implemented |
 
@@ -61,16 +61,16 @@ The following notifications are described in the UI but **not yet implemented**:
 **Template:** `sendProfessionalConfirmation(toEmail, fullName, applicantId?)` in `src/lib/email-sender.ts`
 
 ```
-Subject: Your ELDAA Professional Membership Application
+Subject: Your Re:Member Professional Membership Application
 
 Dear {fullName},
 
-Thank you for your application to become a Professional Member of ELDAA. We will process your application and get back to you as soon as we can.
+Thank you for your application to become a Professional Member of Re:Member. We will process your application and get back to you as soon as we can.
 
 We look forward to seeing you soon.
 
 Kia ora,
-ELDAA Committee
+Re:Member Committee
 ```
 
 **Delivery:** Non-blocking — failures are logged but do not fail webhook processing.
@@ -79,11 +79,11 @@ ELDAA Committee
 
 ---
 
-### 3. Internal Application Notification (ELDAA Membership Team)
+### 3. Internal Application Notification (Re:Member Membership Team)
 
 **Trigger:** After `createApplicationReviewDoc()` completes successfully for professional membership
 
-**To:** `membership@eldaa.org.nz` (hardcoded)
+**To:** `membership@example.com` (hardcoded)
 
 **Template:** `sendProfessionalApplicationNotification(toEmail, applicantName, docUrl, applicantId?)` in `src/lib/email-sender.ts`
 
@@ -97,7 +97,7 @@ Review document: {docUrl}
 
 Please log in to review the application and continue the membership process.
 
-ELDAA
+Re:Member
 ```
 
 **Delivery:** Non-blocking — failures are logged but do not fail webhook processing.
@@ -112,14 +112,14 @@ ELDAA
 
 **To:** Applicant's email address
 
-**Reply-To:** `membership@eldaa.org.nz`
+**Reply-To:** `membership@example.com`
 
 **Template:** `sendAssociateConfirmation(toEmail, fullName, listOnPage, associateApplicationId?)` in `src/lib/email-sender.ts`
 
 ```
-Subject: Welcome to ELDAA — Associate Membership Confirmed
+Subject: Welcome to Re:Member — Associate Membership Confirmed
 
-Welcome to ELDAA ☺
+Welcome to Re:Member ☺
 
 Dear {fullName},
 
@@ -130,17 +130,17 @@ role, and look forward to supporting you in your mahi.
 {listOnPage ? "You have requested to be listed on our Associate Member list on
 our website — we will process that shortly." : "You have not requested to be
 listed at this time. If you would like to be added in future, please email us
-at membership@eldaa.org.nz."}
+at membership@example.com."}
 
 [Resources, Meetings, Networking sections...]
 
-Questions? Email us at membership@eldaa.org.nz — we would love your feedback
+Questions? Email us at membership@example.com — we would love your feedback
 and any ideas you have to support you in your mahi.
 
 Again, welcome on board ☺
 
 Kia ora,
-ELDAA Committee
+Re:Member Committee
 ```
 
 **Delivery:** Non-blocking — fires after Google Doc creation succeeds.
@@ -151,7 +151,7 @@ ELDAA Committee
 
 ### 5. Stripe Payment Receipt
 
-**Trigger:** Stripe Checkout — ELDAA passes `receipt_email` in the Checkout Session API call, which overrides Dashboard automatic receipt settings. Stripe sends its own branded receipt directly to the applicant.
+**Trigger:** Stripe Checkout — Re:Member passes `receipt_email` in the Checkout Session API call, which overrides Dashboard automatic receipt settings. Stripe sends its own branded receipt directly to the applicant.
 
 - **With `receipt_email` in the API call:** Stripe sends a receipt to that specific address regardless of Dashboard settings
 - **Without `receipt_email`:** Stripe uses the Dashboard setting (automatic receipts on/off)
@@ -168,8 +168,8 @@ ELDAA Committee
 
 ```env
 MAILGUN_API_KEY=key-...
-MAILGUN_DOMAIN=mg.eldaa.org.nz
-MAILGUN_FROM=ELDAA Membership Notifications <no-reply@mg.eldaa.org.nz>
+MAILGUN_DOMAIN=mg.example.com
+MAILGUN_FROM=Re:Member Membership Notifications <no-reply@mg.example.com>
 ```
 
 `MAILGUN_FROM` should be a recognisable brand name, not "No Reply" or
@@ -227,7 +227,7 @@ import { sendEmail } from '@/lib/email-sender';
 // In your handler:
 await sendEmail({
   to: applicant.email,
-  subject: 'Your ELDAA Application - Next Steps',
+  subject: 'Your Re:Member Application - Next Steps',
   body: `Dear ${applicant.firstName},\n\n...`,
 });
 ```

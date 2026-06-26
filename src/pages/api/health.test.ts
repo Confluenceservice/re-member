@@ -51,8 +51,8 @@ describe("/api/health", () => {
     it("returns 200 with both subsystems connected", async () => {
       process.env.STRIPE_SECRET_KEY = "sk_test_ok";
       process.env.MAILGUN_API_KEY = "key-test";
-      process.env.MAILGUN_DOMAIN = "mg.eldaa.org.nz";
-      process.env.MAILGUN_FROM = "ELDAA <no-reply@mg.eldaa.org.nz>";
+      process.env.MAILGUN_DOMAIN = "mg.example.com";
+      process.env.MAILGUN_FROM = "Re:Member <no-reply@mg.example.com>";
 
       const GET = await getHandler();
       const res = await GET({} as never);
@@ -74,8 +74,8 @@ describe("/api/health", () => {
   describe("Stripe", () => {
     it("reports not_configured as degraded when STRIPE_SECRET_KEY is absent", async () => {
       process.env.MAILGUN_API_KEY = "key-test";
-      process.env.MAILGUN_DOMAIN = "mg.eldaa.org.nz";
-      process.env.MAILGUN_FROM = "ELDAA <no-reply@mg.eldaa.org.nz>";
+      process.env.MAILGUN_DOMAIN = "mg.example.com";
+      process.env.MAILGUN_FROM = "Re:Member <no-reply@mg.example.com>";
 
       const GET = await getHandler();
       const res = await GET({} as never);
@@ -91,8 +91,8 @@ describe("/api/health", () => {
     it("reports disconnected and degraded (still 200) when products.list throws", async () => {
       process.env.STRIPE_SECRET_KEY = "sk_test_bad";
       process.env.MAILGUN_API_KEY = "key-test";
-      process.env.MAILGUN_DOMAIN = "mg.eldaa.org.nz";
-      process.env.MAILGUN_FROM = "ELDAA <no-reply@mg.eldaa.org.nz>";
+      process.env.MAILGUN_DOMAIN = "mg.example.com";
+      process.env.MAILGUN_FROM = "Re:Member <no-reply@mg.example.com>";
 
       mockProductsList.mockRejectedValueOnce(new Error("Invalid API Key"));
 
@@ -125,7 +125,7 @@ describe("/api/health", () => {
     it("reports not_configured when MAILGUN_FROM is missing (even if API_KEY + DOMAIN are set)", async () => {
       process.env.STRIPE_SECRET_KEY = "sk_test_ok";
       process.env.MAILGUN_API_KEY = "key-test";
-      process.env.MAILGUN_DOMAIN = "mg.eldaa.org.nz";
+      process.env.MAILGUN_DOMAIN = "mg.example.com";
       // MAILGUN_FROM deliberately omitted.
 
       const GET = await getHandler();
@@ -138,8 +138,8 @@ describe("/api/health", () => {
     it("returns connected when all three MAILGUN_* envs are set (no network call)", async () => {
       process.env.STRIPE_SECRET_KEY = "sk_test_ok";
       process.env.MAILGUN_API_KEY = "key-test";
-      process.env.MAILGUN_DOMAIN = "mg.eldaa.org.nz";
-      process.env.MAILGUN_FROM = "ELDAA <no-reply@mg.eldaa.org.nz>";
+      process.env.MAILGUN_DOMAIN = "mg.example.com";
+      process.env.MAILGUN_FROM = "Re:Member <no-reply@mg.example.com>";
 
       const GET = await getHandler();
       const res = await GET({} as never);
@@ -153,8 +153,8 @@ describe("/api/health", () => {
     it("reports both subsystems degraded (still 200)", async () => {
       process.env.STRIPE_SECRET_KEY = "sk_test_bad";
       process.env.MAILGUN_API_KEY = "key-test";
-      process.env.MAILGUN_DOMAIN = "mg.eldaa.org.nz";
-      process.env.MAILGUN_FROM = "ELDAA <no-reply@mg.eldaa.org.nz>";
+      process.env.MAILGUN_DOMAIN = "mg.example.com";
+      process.env.MAILGUN_FROM = "Re:Member <no-reply@mg.example.com>";
 
       mockProductsList.mockRejectedValueOnce(new Error("Stripe down"));
 
@@ -174,8 +174,8 @@ describe("/api/health", () => {
     it("includes renewal_prices field with both tiers when prices resolve", async () => {
       process.env.STRIPE_SECRET_KEY = "sk_test_ok";
       process.env.MAILGUN_API_KEY = "key-test";
-      process.env.MAILGUN_DOMAIN = "mg.eldaa.org.nz";
-      process.env.MAILGUN_FROM = "ELDAA <no-reply@mg.eldaa.org.nz>";
+      process.env.MAILGUN_DOMAIN = "mg.example.com";
+      process.env.MAILGUN_FROM = "Re:Member <no-reply@mg.example.com>";
 
       const GET = await getHandler();
       const res = await GET({} as never);
@@ -200,8 +200,8 @@ describe("/api/health", () => {
     it("reports degraded when PM tier fails to resolve and ok=false for that tier", async () => {
       process.env.STRIPE_SECRET_KEY = "sk_test_ok";
       process.env.MAILGUN_API_KEY = "key-test";
-      process.env.MAILGUN_DOMAIN = "mg.eldaa.org.nz";
-      process.env.MAILGUN_FROM = "ELDAA <no-reply@mg.eldaa.org.nz>";
+      process.env.MAILGUN_DOMAIN = "mg.example.com";
+      process.env.MAILGUN_FROM = "Re:Member <no-reply@mg.example.com>";
 
       mockResolveRenewalPrice.mockImplementation(async (key: string) => {
         if (key === "pm_renewal_nzd") throw new Error("PRICE_INACTIVE: no active price");
@@ -221,8 +221,8 @@ describe("/api/health", () => {
     it("reports degraded when both tiers fail to resolve", async () => {
       process.env.STRIPE_SECRET_KEY = "sk_test_ok";
       process.env.MAILGUN_API_KEY = "key-test";
-      process.env.MAILGUN_DOMAIN = "mg.eldaa.org.nz";
-      process.env.MAILGUN_FROM = "ELDAA <no-reply@mg.eldaa.org.nz>";
+      process.env.MAILGUN_DOMAIN = "mg.example.com";
+      process.env.MAILGUN_FROM = "Re:Member <no-reply@mg.example.com>";
 
       mockResolveRenewalPrice.mockRejectedValue(new Error("MISSING_CONFIG: STRIPE_PRODUCT_PM_RENEWAL not set"));
 

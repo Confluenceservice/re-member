@@ -1,4 +1,4 @@
-# Google Workspace Domain-Wide Delegation for ELDAA Drive Uploads
+# Google Workspace Domain-Wide Delegation for Re:Member Drive Uploads
 
 Use this when Drive uploads 403 with `storageQuotaExceeded` and the cause is
 the service account (SA) having no storage. Symptom in logs:
@@ -31,23 +31,23 @@ fix: confirm SA membership in the Shared Drive (no DWD, no code change).
 ### 1. Find or create a Workspace user for uploads
 
 The impersonation user must:
-- Exist in the same Workspace tenant (`eldaa.org.nz`)
+- Exist in the same Workspace tenant (`example.com`)
 - Have enough Drive storage for the documents you'll upload
 - Not be a real human's account (a shared mailbox or admin-created user is
   ideal — if the SA key leaks, the blast radius is the impersonation user,
   not a person)
 
-`no-reply@eldaa.org.nz` was the original impersonation user (and Gmail
+`no-reply@example.com` was the original impersonation user (and Gmail
 sender). Transactional email moved to Mailgun in 2026-06 and the Gmail
 account was disabled shortly after — the Workspace user no longer exists.
-Current impersonation user: `it-admin@eldaa.org.nz` (set on Fly 2026-06-14,
-both `eldaa` and `eldaa-production`). If this account is also disabled in
+Current impersonation user: `it-admin@example.com` (set on Fly 2026-06-14,
+both `remember` and `remember-production`). If this account is also disabled in
 the future, pick another Workspace admin and update both Fly secrets.
 
 ### 2. Get the service account Client ID
 
 In GCP Console → IAM & Admin → Service Accounts, open
-`eldaa-sheets@stripe-billing-491503.iam.gserviceaccount.com`. Under
+`remember-sheets@stripe-billing-491503.iam.gserviceaccount.com`. Under
 "Advanced settings" → "Show domain-wide delegation", the **Client ID**
 field has the numeric ID. Copy it.
 
@@ -75,27 +75,27 @@ Save. Changes propagate within a few minutes.
 ### 4. Roll the env var to Fly
 
 ```sh
-fly secrets set -a eldaa \
-  GOOGLE_WORKSPACE_IMPERSONATE_USER=it-admin@eldaa.org.nz
+fly secrets set -a remember \
+  GOOGLE_WORKSPACE_IMPERSONATE_USER=it-admin@example.com
 
-fly secrets set -a eldaa-production \
-  GOOGLE_WORKSPACE_IMPERSONATE_USER=it-admin@eldaa.org.nz
+fly secrets set -a remember-production \
+  GOOGLE_WORKSPACE_IMPERSONATE_USER=it-admin@example.com
 ```
 
 Restart the running machines (or wait for auto-stop) so the new env is
 picked up:
 
 ```sh
-fly machine list -a eldaa
-fly machine stop <started-id> -a eldaa
+fly machine list -a remember
+fly machine stop <started-id> -a remember
 # next request cold-starts a fresh machine
 ```
 
 ### 5. Verify
 
 ```sh
-fly logs -a eldaa --no-tail | grep google_service_account_auth
-# expect: {"impersonating":true,"subject":"it-admin@eldaa.org.nz",...}
+fly logs -a remember --no-tail | grep google_service_account_auth
+# expect: {"impersonating":true,"subject":"it-admin@example.com",...}
 ```
 
 Then trigger a real upload (e.g. submit one document via the apply form).
@@ -108,8 +108,8 @@ If impersonation breaks something unexpected (e.g. the impersonation user
 lacks access to a folder the SA was previously sharing itself into):
 
 ```sh
-fly secrets unset -a eldaa GOOGLE_WORKSPACE_IMPERSONATE_USER
-fly secrets unset -a eldaa-production GOOGLE_WORKSPACE_IMPERSONATE_USER
+fly secrets unset -a remember GOOGLE_WORKSPACE_IMPERSONATE_USER
+fly secrets unset -a remember-production GOOGLE_WORKSPACE_IMPERSONATE_USER
 ```
 
 Without the env var, the helper stops adding the `subject` claim and the

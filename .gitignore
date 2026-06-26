@@ -15,6 +15,9 @@ coverage/
 .run/gmail-oauth-env.sh
 .run/health-alert-worker/.wrangler/
 .run/health-alert-worker/dev/
+.run/*.log
+.run/*.pid
+*.har
 
 # OpenWolf runtime artifacts (not cross-machine state). The .md/.json memory
 # files (memory.md, cerebrum.md, buglog.json, anatomy.md) ARE tracked — the

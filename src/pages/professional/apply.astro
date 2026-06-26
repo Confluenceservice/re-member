@@ -6,19 +6,19 @@ const token = Astro.url.searchParams.get("token");
 
 <BaseLayout
   title="Professional Membership Application"
-  description="Apply for Professional Membership with ELDAA."
+  description="Apply for Professional Membership with Re:Member."
 >
   <section class="bg-white border border-gray-200 rounded-xl p-4">
     <a
-      href="https://www.eldaa.org.nz"
+      href="https://www.example.com"
       target="_blank"
       rel="noopener noreferrer"
       class="inline-block mb-3 sm:mb-4"
-      aria-label="ELDAA — visit eldaa.org.nz"
+      aria-label="Re:Member — visit example.com"
     >
       <img
         src="/logo.svg"
-        alt="ELDAA"
+        alt="Re:Member"
         class="h-14 sm:h-20 w-auto"
         width="357"
         height="144"
@@ -325,7 +325,7 @@ const token = Astro.url.searchParams.get("token");
         </div>
       </div>
       <div class="p-3 border border-gray-200 rounded-lg">
-        <p class="font-semibold mb-2">Are you willing to attend regular ELDAA meetings and events, and engage with and support your local ELDAA community? *</p>
+        <p class="font-semibold mb-2">Are you willing to attend regular Re:Member meetings and events, and engage with and support your local Re:Member community? *</p>
         <div class="flex gap-6">
           <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="attendMeetings" value="YES" /> Yes</label>
           <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="attendMeetings" value="NO" /> No</label>
@@ -433,7 +433,7 @@ const token = Astro.url.searchParams.get("token");
       <div class="p-3 border border-gray-200 rounded-lg">
         <label class="flex items-start gap-2 cursor-pointer">
           <input type="checkbox" id="declEthics" class="mt-1" />
-          <span>I have read and agree to the ELDAA Code of Ethics. *</span>
+          <span>I have read and agree to the Re:Member Code of Ethics. *</span>
         </label>
       </div>
       <div class="p-3 border border-gray-200 rounded-lg">
@@ -469,7 +469,7 @@ const token = Astro.url.searchParams.get("token");
       <div class="p-3 border border-gray-200 rounded-lg">
         <label class="flex items-start gap-2 cursor-pointer">
           <input type="checkbox" id="declMeetings" class="mt-1" />
-          <span>I agree to attend regular ELDAA meetings and support my local community. *</span>
+          <span>I agree to attend regular Re:Member meetings and support my local community. *</span>
         </label>
       </div>
     </div>
@@ -521,7 +521,7 @@ const token = Astro.url.searchParams.get("token");
     <h2 class="m-0 mb-4 text-xl">Application Complete</h2>
     <p>Your Professional Membership application has been completed. Thank you!</p>
     <p class="mt-4">
-      <a href="https://eldaa.org.nz" class="text-blue-600 hover:text-blue-700">Return to ELDAA website</a>
+      <a href="https://example.com" class="text-blue-600 hover:text-blue-700">Return to Re:Member website</a>
     </p>
   </section>
 
@@ -548,7 +548,7 @@ const token = Astro.url.searchParams.get("token");
 
   const REQUIRED_DOCS = [
     { id: "training", label: "Certificates of Training", description: "Evidence of completed training" },
-    { id: "ethics", label: "Code of Ethics", description: "Signed ELDAA Code of Ethics and Scope of Practice" },
+    { id: "ethics", label: "Code of Ethics", description: "Signed Re:Member Code of Ethics and Scope of Practice" },
     { id: "criminal", label: "Criminal Records Check", description: "Ministry of Justice background check — <a href='https://www.justice.govt.nz/criminal-records/' target='_blank' rel='noopener noreferrer' class='text-blue-600 underline'>www.justice.govt.nz/criminal-records/</a>" },
     { id: "advance_care", label: "Advanced Care Planning (NZ)", description: "4 modules completed" },
     { id: "assisted_dying", label: "Assisted Dying Training", description: "Te Whatu Ora, 3 modules completed" },
@@ -582,7 +582,7 @@ const token = Astro.url.searchParams.get("token");
     { label: "Body care and After Death care", description: "Be knowledgeable and comfortable assisting families with after-death care, including washing, dressing, and cooling the body." },
     { label: "Grief & Bereavement Awareness", description: "Offer compassionate support and connect to resources for grief, understanding different ways people process loss." },
     { label: "Interdisciplinary Collaboration", description: "Work alongside medical, hospice, iwi/hapū, and community professionals." },
-    { label: "Mentorship", description: "Be willing to mentor other ELDAA members from time to time where appropriate." },
+    { label: "Mentorship", description: "Be willing to mentor other Re:Member members from time to time where appropriate." },
   ];
 
   let currentStep = 0;
@@ -638,7 +638,7 @@ const token = Astro.url.searchParams.get("token");
 
     if (resend) {
       if (emailSent === false) {
-        resend.textContent = "We couldn't send the email just now. Please try again in a minute, or contact membership@eldaa.org.nz.";
+        resend.textContent = "We couldn't send the email just now. Please try again in a minute, or contact membership@example.com.";
         resend.classList.remove("hidden");
       } else {
         resend.classList.add("hidden");
@@ -842,7 +842,7 @@ const token = Astro.url.searchParams.get("token");
         </div>
         <div>
           <label class="text-xs font-semibold block mb-1">Provider *</label>
-          <input type="text" data-course="provider" value="${data.provider || ""}" placeholder="e.g. ELDAA"
+          <input type="text" data-course="provider" value="${data.provider || ""}" placeholder="e.g. Re:Member"
             class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" />
         </div>
         <div>

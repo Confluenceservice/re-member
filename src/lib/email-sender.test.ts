@@ -32,8 +32,8 @@ const ORIGINAL_ENV = { ...process.env };
 
 function setMailgunEnv(overrides: Partial<NodeJS.ProcessEnv> = {}) {
   process.env.MAILGUN_API_KEY = "key-test";
-  process.env.MAILGUN_DOMAIN = "mg.eldaa.org.nz";
-  process.env.MAILGUN_FROM = "ELDAA <no-reply@mg.eldaa.org.nz>";
+  process.env.MAILGUN_DOMAIN = "mg.example.com";
+  process.env.MAILGUN_FROM = "Re:Member <no-reply@mg.example.com>";
   for (const [k, v] of Object.entries(overrides)) {
     if (v === undefined) delete process.env[k];
     else process.env[k] = v;
@@ -64,9 +64,9 @@ describe("sendEmail", () => {
     );
 
     expect(mockMessagesCreate).toHaveBeenCalledWith(
-      "mg.eldaa.org.nz",
+      "mg.example.com",
       expect.objectContaining({
-        from: "ELDAA <no-reply@mg.eldaa.org.nz>",
+        from: "Re:Member <no-reply@mg.example.com>",
         to: ["a@b.com"],
         subject: "Hello",
         text: "World",
@@ -76,12 +76,12 @@ describe("sendEmail", () => {
 
   it("passes Reply-To via h:Reply-To header when replyTo is set", async () => {
     await sendEmail(
-      { to: "a@b.com", subject: "S", body: "B", replyTo: "help@eldaa.org.nz" },
+      { to: "a@b.com", subject: "S", body: "B", replyTo: "help@example.com" },
       { template: "resume_link" },
     );
 
     const call = mockMessagesCreate.mock.calls[0][1];
-    expect(call["h:Reply-To"]).toBe("help@eldaa.org.nz");
+    expect(call["h:Reply-To"]).toBe("help@example.com");
   });
 
   it("omits h:Reply-To when not set", async () => {
@@ -191,10 +191,10 @@ async function captureBody(template: "professional" | "associate" | "associateNo
       associate: () => sendAssociateConfirmation("bob@example.com", "Bob Smith", true),
       associateNotListed: () => sendAssociateConfirmation("bob@example.com", "Bob Smith", false),
       notification: () =>
-        sendProfessionalApplicationNotification("membership@eldaa.org.nz", "Jane Doe", "https://docs.google.com/document/d/abc"),
+        sendProfessionalApplicationNotification("membership@example.com", "Jane Doe", "https://docs.google.com/document/d/abc"),
       associateNotification: () =>
-        sendAssociateApplicationNotification("membership@eldaa.org.nz", "Bob Smith", "https://docs.google.com/document/d/xyz"),
-      resume: () => sendResumeLink("jane@example.com", "Jane Doe", "https://eldaa.org.nz/resume/abc123"),
+        sendAssociateApplicationNotification("membership@example.com", "Bob Smith", "https://docs.google.com/document/d/xyz"),
+      resume: () => sendResumeLink("jane@example.com", "Jane Doe", "https://example.com/resume/abc123"),
     }[template]()
   );
 
@@ -207,10 +207,10 @@ describe("sendProfessionalConfirmation", () => {
   it("addresses the applicant by full name and includes the right subject", async () => {
     const { to, subject, text } = await captureBody("professional");
     expect(to).toBe("jane@example.com");
-    expect(subject).toBe("Your ELDAA Professional Membership Application");
+    expect(subject).toBe("Your Re:Member Professional Membership Application");
     expect(text).toContain("Dear Jane Doe");
-    expect(text).toContain("Professional Member of ELDAA");
-    expect(text).toContain("Kia ora");
+    expect(text).toContain("Professional Member of Re:Member");
+    expect(text).toContain("The Re:Member Committee");
   });
 });
 
@@ -218,13 +218,13 @@ describe("sendAssociateConfirmation", () => {
   it("includes the listing note when listOnPage is true and sets Reply-To", async () => {
     const { text, replyTo } = await captureBody("associate");
     expect(text).toContain("You have requested to be listed on our Associate Member list");
-    expect(replyTo).toBe("membership@eldaa.org.nz");
+    expect(replyTo).toBe("membership@example.com");
   });
 
   it("includes the non-listing note when listOnPage is false", async () => {
     const { text } = await captureBody("associateNotListed");
     expect(text).toContain("You have not requested to be listed at this time");
-    expect(text).toContain("membership@eldaa.org.nz");
+    expect(text).toContain("membership@example.com");
   });
 
   it("includes member resources, meetings, and welcome content", async () => {
@@ -239,7 +239,7 @@ describe("sendAssociateConfirmation", () => {
 describe("sendProfessionalApplicationNotification", () => {
   it("includes applicant name and Google Doc URL", async () => {
     const { to, subject, text } = await captureBody("notification");
-    expect(to).toBe("membership@eldaa.org.nz");
+    expect(to).toBe("membership@example.com");
     expect(subject).toBe("New Professional Membership Application — Jane Doe");
     expect(text).toContain("Applicant: Jane Doe");
     expect(text).toContain("https://docs.google.com/document/d/abc");
@@ -249,7 +249,7 @@ describe("sendProfessionalApplicationNotification", () => {
 describe("sendAssociateApplicationNotification", () => {
   it("includes associate name and review doc URL", async () => {
     const { to, subject, text } = await captureBody("associateNotification");
-    expect(to).toBe("membership@eldaa.org.nz");
+    expect(to).toBe("membership@example.com");
     expect(subject).toBe("New Associate Membership Application — Bob Smith");
     expect(text).toContain("Applicant: Bob Smith");
     expect(text).toContain("https://docs.google.com/document/d/xyz");
@@ -260,9 +260,9 @@ describe("sendResumeLink", () => {
   it("includes the resume link and applicant name", async () => {
     const { to, subject, text } = await captureBody("resume");
     expect(to).toBe("jane@example.com");
-    expect(subject).toBe("Your ELDAA Professional Membership Application");
+    expect(subject).toBe("Your Re:Member Professional Membership Application");
     expect(text).toContain("Dear Jane Doe");
-    expect(text).toContain("https://eldaa.org.nz/resume/abc123");
+    expect(text).toContain("https://example.com/resume/abc123");
     expect(text).toContain("If you did not start this application, please ignore this email");
   });
 });

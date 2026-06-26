@@ -151,7 +151,7 @@ describe("upload-sheet", () => {
     vi.clearAllMocks();
     originalEnv = { ...process.env };
     process.env.GOOGLE_SHEETS_SPREADSHEET_ID = "spreadsheet_123";
-    process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL = "test@eldaa.iam.gserviceaccount.com";
+    process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL = "test@remember.iam.gserviceaccount.com";
     process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_KEY = "-----BEGIN RSA KEY-----\ntest\n-----END RSA KEY-----\n";
   });
 

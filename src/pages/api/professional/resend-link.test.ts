@@ -52,7 +52,7 @@ function makeRequest(body: unknown): Request {
 describe("POST /api/professional/resend-link", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetSiteBaseUrl.mockReturnValue("https://eldaa.org.nz");
+    mockGetSiteBaseUrl.mockReturnValue("https://example.com");
   });
 
   it("resends the resume link to the applicant's email", async () => {
@@ -66,18 +66,18 @@ describe("POST /api/professional/resend-link", () => {
 
     const res = await POST({
       request: makeRequest({ token: "abc-token" }),
-      url: new URL("https://eldaa.org.nz/api/professional/resend-link"),
+      url: new URL("https://example.com/api/professional/resend-link"),
     } as any);
     const json = await res.json();
 
     expect(res.status).toBe(200);
     expect(json.success).toBe(true);
     expect(json.emailSent).toBe(true);
-    expect(json.resumeLink).toBe("https://eldaa.org.nz/professional/apply?token=abc-token");
+    expect(json.resumeLink).toBe("https://example.com/professional/apply?token=abc-token");
     expect(mockSendResumeLink).toHaveBeenCalledWith(
       "jane@example.com",
       "Jane Doe",
-      "https://eldaa.org.nz/professional/apply?token=abc-token",
+      "https://example.com/professional/apply?token=abc-token",
       "applicant-1"
     );
   });
@@ -85,7 +85,7 @@ describe("POST /api/professional/resend-link", () => {
   it("rejects an empty token", async () => {
     const res = await POST({
       request: makeRequest({ token: "" }),
-      url: new URL("https://eldaa.org.nz/api/professional/resend-link"),
+      url: new URL("https://example.com/api/professional/resend-link"),
     } as any);
     const json = await res.json();
     expect(res.status).toBe(400);
@@ -97,7 +97,7 @@ describe("POST /api/professional/resend-link", () => {
     mockGetApplicantByToken.mockResolvedValue(null);
     const res = await POST({
       request: makeRequest({ token: "missing" }),
-      url: new URL("https://eldaa.org.nz/api/professional/resend-link"),
+      url: new URL("https://example.com/api/professional/resend-link"),
     } as any);
     const json = await res.json();
     expect(res.status).toBe(404);
@@ -114,7 +114,7 @@ describe("POST /api/professional/resend-link", () => {
     });
     const res = await POST({
       request: makeRequest({ token: "abc" }),
-      url: new URL("https://eldaa.org.nz/api/professional/resend-link"),
+      url: new URL("https://example.com/api/professional/resend-link"),
     } as any);
     const json = await res.json();
     expect(res.status).toBe(400);
@@ -133,13 +133,13 @@ describe("POST /api/professional/resend-link", () => {
 
     const res = await POST({
       request: makeRequest({ token: "abc-token" }),
-      url: new URL("https://eldaa.org.nz/api/professional/resend-link"),
+      url: new URL("https://example.com/api/professional/resend-link"),
     } as any);
     const json = await res.json();
 
     expect(res.status).toBe(500);
     expect(json.error).toContain("Could not send");
-    expect(json.resumeLink).toBe("https://eldaa.org.nz/professional/apply?token=abc-token");
+    expect(json.resumeLink).toBe("https://example.com/professional/apply?token=abc-token");
     expect(mockCaptureException).toHaveBeenCalled();
   });
 

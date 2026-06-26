@@ -1,4 +1,4 @@
-# ELDAA Membership Applications — User Overview
+# Re:Member Membership Applications — User Overview
 
 A complete, end-to-end guide to how the Professional and Associate Membership applications work — from starting a form to having a paid subscription and a review document generated.
 
@@ -31,7 +31,7 @@ Start → Single-Page Form → Payment → Review Doc
 
 ### 1. Starting an Application
 
-The applicant visits [eldaa.org.nz/professional/apply](https://eldaa.org.nz/professional/apply).
+The applicant visits [example.com/professional/apply](https://example.com/professional/apply).
 
 They fill in a short registration form:
 
@@ -43,7 +43,7 @@ They fill in a short registration form:
 On submitting, the system:
 1. Creates a new row in the **Professional Applications** Google Sheet
 2. Generates a unique **resume token** (UUID) stored in column AG
-3. Sends an email with a personal resume link: `eldaa.org.nz/professional/apply?token=<uuid>`
+3. Sends an email with a personal resume link: `example.com/professional/apply?token=<uuid>`
 
 > **If email fails**, the link is still displayed on screen — the applicant can bookmark it or copy it manually.
 
@@ -100,7 +100,7 @@ Every "Continue" or "Back" button press triggers an autosave:
 | Category | Description |
 |---|---|
 | `training` | Certificates of training (may be multiple) |
-| `ethics` | Signed ELDAA Code of Ethics and Scope of Practice |
+| `ethics` | Signed Re:Member Code of Ethics and Scope of Practice |
 | `criminal` | Ministry of Justice criminal record check |
 | `advance_care` | Advanced Care Planning NZ (4 modules) |
 | `assisted_dying` | Assisted Dying online training — Te Whatu Ora (3 modules) |
@@ -148,7 +148,7 @@ If complete, a Stripe Checkout session is created and the applicant is redirecte
 - **Mode:** one-time payment (`mode: "payment"`)
 - **First term:** prorated from today until 1 July (the renewal date)
 - **Annual renewal:** Stripe subscription created in the post-payment webhook, billed annually from 1 July
-- The checkout URL is: `https://eldaa.org.nz/professional/success-upload?session_id=...`
+- The checkout URL is: `https://example.com/professional/success-upload?session_id=...`
 
 ### What happens on the Stripe side
 
@@ -253,7 +253,7 @@ Files are stored with a random UUID as filename (original name preserved in the 
 
 ## 11. Resuming an Application
 
-The applicant opens their resume link: `eldaa.org.nz/professional/apply?token=<uuid>`
+The applicant opens their resume link: `example.com/professional/apply?token=<uuid>`
 
 The server looks up the applicant by `resume_token` (column AG). If found, all form data and document statuses are returned and the form is pre-populated.
 
@@ -287,8 +287,8 @@ The server looks up the applicant by `resume_token` (column AG). If found, all f
 
 | Environment | App name | Stripe webhook URL |
 |---|---|---|
-| Staging | `eldaa` | `https://eldaa.fly.dev/api/stripe-webhook` |
-| Production | `eldaa-production` | `https://subscribe.eldaa.org.nz/api/stripe-webhook` |
+| Staging | `remember` | `https://remember-staging.fly.dev/api/stripe-webhook` |
+| Production | `remember-production` | `https://subscribe.example.com/api/stripe-webhook` |
 
 If the webhook URL was misconfigured during a payment, correct it in the Stripe dashboard and replay the `checkout.session.completed` event.
 
@@ -325,7 +325,7 @@ The single-page form collects:
 - Business name (optional)
 
 **Additional Information:**
-- Interest in joining ELDAA (free text, required)
+- Interest in joining Re:Member (free text, required)
 - End of Life Doula training details (free text, required)
 - Whether to be listed on the Associate Members page (`yes` / `no`)
 - Listing details (required if `listOnPage = yes`)

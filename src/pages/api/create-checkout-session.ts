@@ -109,7 +109,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (isAssociateApply) {
     if (!phone) return badRequest("Provide a phone number.");
     if (!fullAddress) return badRequest("Provide a full address.");
-    if (!interestJoining) return badRequest("Provide your interest in joining ELDAA.");
+    if (!interestJoining) return badRequest("Provide your interest in joining Re:Member.");
     if (!trainingDetails) return badRequest("Provide your End of Life Doula training details.");
     if (!listOnPage || (listOnPage !== "yes" && listOnPage !== "no")) {
       return badRequest("Select whether you want to be listed on the Associate Members page.");

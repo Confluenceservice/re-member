@@ -33,7 +33,7 @@ describe("google-sheets", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Set valid env vars for all tests
-    process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL = "test@eldaa-sheets.iam.gserviceaccount.com";
+    process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL = "test@remember-sheets.iam.gserviceaccount.com";
     process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_KEY = "-----BEGIN PRIVATE KEY-----\ntest-key\n-----END PRIVATE KEY-----";
     process.env.GOOGLE_SHEETS_SPREADSHEET_ID = "1Zbqn6BSExD5V9cPmA2rCJ2rN5f7gnP9fHjP0s5oq_I8";
   });
@@ -210,7 +210,7 @@ describe("google-sheets", () => {
       await appendEmailLog({
         timestamp: "2026-06-01T09:00:00.000Z",
         to: "jane@example.com",
-        subject: "Your ELDAA Professional Membership Application",
+        subject: "Your Re:Member Professional Membership Application",
         template: "confirmation",
         applicantId: "app_abc123",
         result: "sent",
@@ -225,7 +225,7 @@ describe("google-sheets", () => {
           values: [[
             "2026-06-01T09:00:00.000Z",
             "jane@example.com",
-            "Your ELDAA Professional Membership Application",
+            "Your Re:Member Professional Membership Application",
             "confirmation",
             "app_abc123",
             "sent",
@@ -241,7 +241,7 @@ describe("google-sheets", () => {
       await appendEmailLog({
         timestamp: "2026-06-01T09:00:00.000Z",
         to: "jane@example.com",
-        subject: "Your ELDAA Professional Membership Application",
+        subject: "Your Re:Member Professional Membership Application",
         template: "resume_link",
         applicantId: "app_abc123",
         result: "failed",
@@ -258,7 +258,7 @@ describe("google-sheets", () => {
 
       await appendEmailLog({
         timestamp: "2026-06-01T09:00:00.000Z",
-        to: "membership@eldaa.org.nz",
+        to: "membership@example.com",
         subject: "New Professional Membership Application — Jane Doe",
         template: "application_notification",
         result: "sent",
@@ -274,7 +274,7 @@ describe("google-sheets", () => {
       await appendEmailLog({
         timestamp: "2026-06-01T09:00:00.000Z",
         to: "bob@example.com",
-        subject: "Welcome to ELDAA — Associate Membership Confirmed",
+        subject: "Welcome to Re:Member — Associate Membership Confirmed",
         template: "associate_confirmation",
         result: "sent",
       });
