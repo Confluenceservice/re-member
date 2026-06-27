@@ -12,7 +12,9 @@ export interface PdEntry {
 
 export interface RenewalInput {
   renewalId: string;
-  tier: "pm" | "am";
+  /** TierConfig.storageValue — phase K widened from "pm"|"am" literal to
+   *  string so any TierConfig entry can be written without code changes. */
+  tier: string;
   year: number;
   firstName: string;
   lastName: string;
@@ -28,7 +30,7 @@ export interface RenewalInput {
 
 export interface RenewalRow {
   renewalId: string;
-  tier: "pm" | "am";
+  tier: string;
   renewalYear: number;
   firstName: string;
   lastName: string;
@@ -327,13 +329,13 @@ export async function getRenewalById(renewalId: string): Promise<RenewalRow | nu
     try { return JSON.parse(pdRaw); } catch { return []; }
   })();
 
-  // Plan finding m3: tier value is data-driven from TIERS. Unknown values
-  // default to "pm" for backward compatibility with legacy rows. The next
-  // time a new tier is added to TIERS, its storageValue joins the valid set
-  // automatically — no reader edit required.
+  // Plan finding m3 + phase K: tier value is data-driven from TIERS. Unknown
+  // values default to "pm" for backward compatibility with legacy rows. The
+  // next time a new tier is added to TIERS, its storageValue joins the valid
+  // set automatically — no reader edit required.
   const validStorageValues = new Set(listTiers().map((t) => t.storageValue));
   const rawTier = String(match[1] ?? "");
-  const tier: "pm" | "am" = (validStorageValues.has(rawTier) ? rawTier : "pm") as "pm" | "am";
+  const tier: string = validStorageValues.has(rawTier) ? rawTier : "pm";
 
   return {
     renewalId: match[0] ?? "",

@@ -88,10 +88,10 @@ export const POST: APIRoute = async ({ request, params }) => {
   const year = Number(values.year);
   const pdEntries = coercePdEntries(values.pdEntries);
 
-  // tier is config-sourced (plan finding C3: sheet + metadata must match).
-  // Cast to the legacy literal union — RenewalInput.tier is "pm" | "am";
-  // storageValue is typed string for future flexibility.
-  const tier = tierConfig.storageValue as "pm" | "am";
+  // Phase K: tier is config-sourced (plan finding C3: sheet + metadata must
+  // match). RenewalInput.tier widened from "pm"|"am" to string, so the cast
+  // is gone — storageValue is already a string.
+  const tier = tierConfig.storageValue;
 
   let priceConfig;
   try {
