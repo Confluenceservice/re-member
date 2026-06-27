@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Step from "../../lib/forms/render/Step.astro";
-import { schema as professionalApplySchema } from "../../lib/forms/schemas/professionalApply";
+import { schema as professionalApplySchema, COMPETENCY_IDS } from "../../lib/forms/schemas/professionalApply";
 import professionalApplyContent from "../../lib/forms/schemas/professionalApply.content.json";
 
 const token = Astro.url.searchParams.get("token");
@@ -161,20 +161,23 @@ const token = Astro.url.searchParams.get("token");
   <!-- Steps 1-7: schema-driven render (Phase J1). Step 8 (uploads) stays
        inline for now — J3 will wire form-client attachUploadLock + the
        per-doc-type multi-file UI. Section IDs preserved so the existing
-       showStep() nav works unchanged. -->
-  {professionalApplySchema.steps.slice(0, 7).map((step, i) => (
-    <section id={`section-${i + 1}`} class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
-      <Step step={step} content={professionalApplyContent} values={{}} />
-      <div class="mt-6 flex gap-3 justify-end">
-        {i > 0 && (
-          <button class="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg cursor-pointer" data-goto={i}>Back</button>
-        )}
-        <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl" data-next={i + 2}>
-          {i === 6 ? "Continue to Documents" : "Continue"}
-        </button>
-      </div>
-    </section>
-  ))}
+       showStep() nav works unchanged. Wrapped in a <form> so form-client
+       attachAutosaveQueue (Phase J2) can read FormData(form). -->
+  <form id="professional-apply-form" data-schema-driven data-schema-id={professionalApplySchema.id} novalidate>
+    {professionalApplySchema.steps.slice(0, 7).map((step, i) => (
+      <section id={`section-${i + 1}`} class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
+        <Step step={step} content={professionalApplyContent} values={{}} />
+        <div class="mt-6 flex gap-3 justify-end">
+          {i > 0 && (
+            <button class="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg cursor-pointer" data-goto={i}>Back</button>
+          )}
+          <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl" data-next={i + 2}>
+            {i === 6 ? "Continue to Documents" : "Continue"}
+          </button>
+        </div>
+      </section>
+    ))}
+  </form>
 
   <!-- Step 8: Document Upload -->
   <section id="section-8" class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
@@ -227,6 +230,52 @@ const token = Astro.url.searchParams.get("token");
     <p id="error-message"></p>
     <a href="/professional/apply" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg inline-block mt-4">Start New Application</a>
   </section>
+
+  <script id="form-schema" type="application/json" set:html={JSON.stringify(professionalApplySchema)}></script>
+  <script id="competency-order" type="application/json" set:html={JSON.stringify(COMPETENCY_IDS)}></script>
+
+  <script>
+    // @ts-nocheck — module script; DOM glue.
+    import { mount, attachAutosaveQueue } from "../../lib/forms/render/form-client";
+
+    const form = document.querySelector("form[data-schema-driven]");
+    const schemaEl = document.getElementById("form-schema");
+    const orderEl = document.getElementById("competency-order");
+    if (form && schemaEl?.textContent && orderEl?.textContent) {
+      try {
+        const schema = JSON.parse(schemaEl.textContent);
+        const competencyOrder = JSON.parse(orderEl.textContent);
+        mount(form.parentElement, { schema });
+
+        // Phase J2: form-client attachAutosaveQueue replaces the inline
+        // queueFormSave for background saves. The Continue/Back click handlers
+        // still await __flushAutosave() to ensure pending saves complete before
+        // navigating. debounceMs 800ms prevents spamming during fast typing.
+        const autosave = attachAutosaveQueue(form, {
+          endpoint: "/api/professional/apply",
+          serialize: (fd) => JSON.stringify(window.__buildPayload__(fd, window.__token__ || "")),
+          contentType: "application/json",
+          debounceMs: 800,
+          trigger: "input",
+          onSuccess: (data) => {
+            if (data?.applicantId) {
+              window.__applicantId__ = data.applicantId;
+            }
+            if (data?.resumeLink) {
+              const nextToken = (data.resumeLink.match(/[?&]token=([^&]+)/) || [])[1];
+              if (nextToken) {
+                window.__token__ = decodeURIComponent(nextToken);
+              }
+            }
+          },
+        });
+
+        window.__flushAutosave__ = autosave.flush;
+      } catch (err) {
+        console.warn("[apply] autosave setup failed", err);
+      }
+    }
+  </script>
 </BaseLayout>
 
 <script is:inline define:vars={{ token }}>
@@ -242,18 +291,26 @@ const token = Astro.url.searchParams.get("token");
     { id: "section-8", label: "Documents" },
   ];
 
-  const REQUIRED_DOCS = [
-    { id: "training", label: "Certificates of Training", description: "Evidence of completed training" },
-    { id: "ethics", label: "Code of Ethics", description: "Signed Re:Member Code of Ethics and Scope of Practice" },
-    { id: "criminal", label: "Criminal Records Check", description: "Ministry of Justice background check — <a href='https://www.justice.govt.nz/criminal-records/' target='_blank' rel='noopener noreferrer' class='text-blue-600 underline'>www.justice.govt.nz/criminal-records/</a>" },
-    { id: "advance_care", label: "Advanced Care Planning (NZ)", description: "4 modules completed" },
-    { id: "assisted_dying", label: "Assisted Dying Training", description: "Te Whatu Ora, 3 modules completed" },
-    { id: "fundamentals", label: "Fundamentals of Palliative Care", description: "Hospice NZ, 4 online modules" },
-  ];
-
-  const OPTIONAL_DOCS = [
-    { id: "insurance", label: "Professional Indemnity Insurance", description: "Optional but recommended" },
-  ];
+  // Phase J3: doc types are now derived from the schema's uploads.docTypes —
+  // not hardcoded ELDAA-specific labels. Schema is single source of truth.
+  // Per-docType descriptions (rendered with HTML allowed) are still inline
+  // here because the schema's docTypes list doesn't carry HTML — pure data.
+  const DOC_DESCRIPTIONS = {
+    training: "Evidence of completed training",
+    ethics: "Signed Re:Member Code of Ethics and Scope of Practice",
+    criminal: "Ministry of Justice background check — <a href='https://www.justice.govt.nz/criminal-records/' target='_blank' rel='noopener noreferrer' class='text-blue-600 underline'>www.justice.govt.nz/criminal-records/</a>",
+    advance_care: "4 modules completed",
+    assisted_dying: "Te Whatu Ora, 3 modules completed",
+    fundamentals: "Hospice NZ, 4 online modules",
+    insurance: "Optional but recommended",
+  };
+  const ALL_DOC_TYPES = (professionalApplySchema.uploads?.docTypes ?? []).map((d) => ({
+    id: d.id,
+    label: d.label,
+    required: d.required,
+    description: DOC_DESCRIPTIONS[d.id] ?? "",
+  }));
+  const REQUIRED_DOC_TYPES = ALL_DOC_TYPES.filter((d) => d.required);
   const MAX_UPLOAD_SIZE_MB = 50;
   const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 
@@ -577,59 +634,91 @@ const token = Astro.url.searchParams.get("token");
     btn.classList.remove("opacity-70", "cursor-not-allowed", "pointer-events-none");
   }
 
+  /**
+   * Phase J2: saveFormData now reads FormData(form) directly. The schema-driven
+   * render emits input `name` attributes matching the schema field names
+   * (with dotted paths for nested groups + repeatables). buildPayload below
+   * flattens groups, serialises repeatables as JSON arrays, and serialises
+   * grids as JSON strings — matching the `/api/professional/apply` POST contract.
+   */
+  function buildPayload(fd) {
+    const activeToken = window.__token__ || token;
+    const flat = { token: activeToken || "", declarationSignedAt: new Date().toISOString() };
+
+    // Pass 1: read all FormData entries. Dotted names flatten to last segment
+    // (matches server contract — referees.referee1Name → referee1Name).
+    for (const [key, value] of fd.entries()) {
+      const flatKey = key.includes(".") ? key.split(".").pop() : key;
+      flat[flatKey] = typeof value === "string" ? value : "";
+    }
+
+    // Pass 2: serialise repeatables as JSON arrays of objects.
+    flat.qualifications = JSON.stringify(serializeRepeatable(fd, "qualifications"));
+    flat.experience = JSON.stringify(serializeRepeatable(fd, "experience"));
+
+    // Pass 3: serialise furtherRequirements grid as object keyed by column id.
+    // FieldRenderer emits name="furtherRequirements.{col}" value="true" per checked column.
+    const furtherRequirementsObj = {};
+    for (const [key, value] of fd.entries()) {
+      if (key.startsWith("furtherRequirements.")) {
+        const col = key.slice("furtherRequirements.".length);
+        furtherRequirementsObj[col] = value === "true" ? "YES" : "NO";
+      }
+    }
+    flat.furtherRequirements = JSON.stringify(furtherRequirementsObj);
+
+    // Pass 4: serialise coreCompetencies grid as JSON array in column order.
+    // Order is read from a hidden <script type="application/json"> populated
+    // server-side from COMPETENCY_IDS so the array matches the sheet contract.
+    const competencyOrder = window.__competencyOrder__ || [];
+    flat.coreCompetencies = JSON.stringify(
+      competencyOrder.map((id) => fd.get(`coreCompetencies.${id}`) === "true" ? "yes" : "no"),
+    );
+
+    // Pass 5: declarations — checkbox value="true" → "TRUE"/"" for the sheet.
+    const declKeys = [
+      "declarationAccuracy", "declarationEthics", "declarationScope",
+      "declarationDoulaServices", "declarationInterview",
+      "declarationProfessionalDev", "declarationCriminalCheck",
+      "declarationMeetings",
+    ];
+    for (const k of declKeys) {
+      flat[k] = flat[k] === "true" ? "TRUE" : "";
+    }
+
+    return flat;
+  }
+
+  function serializeRepeatable(fd, fieldName) {
+    // fd has entries like "qualifications.0.name", "qualifications.1.provider".
+    // Group by index, build array of objects in index order.
+    const rows = new Map();
+    const re = new RegExp(`^${fieldName}\\.(\\d+)\\.(.+)$`);
+    for (const [key, value] of fd.entries()) {
+      const m = key.match(re);
+      if (!m) continue;
+      const idx = Number(m[1]);
+      const subKey = m[2];
+      if (!rows.has(idx)) rows.set(idx, {});
+      rows.get(idx)[subKey] = value;
+    }
+    return Array.from(rows.keys()).sort((a, b) => a - b).map((k) => rows.get(k));
+  }
+
   async function saveFormData() {
     const activeToken = window.__token__ || token;
     if (!window.__applicantId__ && !activeToken) return;
 
-    try {
-      const payload = {
-        token: activeToken || "",
-        firstName: document.getElementById("firstName")?.value?.trim() || "",
-        lastName: document.getElementById("lastName")?.value?.trim() || "",
-        phone: document.getElementById("phone")?.value?.trim() || "",
-        email: document.getElementById("email")?.value?.trim() || "",
-        dateOfBirth: document.getElementById("dateOfBirth")?.value || "",
-        ethnicity: document.getElementById("ethnicity")?.value || "",
-        address: document.getElementById("address")?.value || "",
-        postalAddress: document.getElementById("postalAddress")?.value || "",
-        businessName: document.getElementById("businessName")?.value || "",
-        website: document.getElementById("website")?.value || "",
-        qualifications: "[]", // Phase J2: read from FormData repeatable rows
-        experience: "[]",     // Phase J2: read from FormData repeatable rows
-        furtherRequirements: JSON.stringify({
-          agreeDoulaServices: document.querySelector('input[name="agreeDoulaServices"]:checked')?.value || "",
-          agreeInterview: document.querySelector('input[name="agreeInterview"]:checked')?.value || "",
-          commitProfessionalDev: document.querySelector('input[name="commitProfessionalDev"]:checked')?.value || "",
-          willInsurance: document.querySelector('input[name="willInsurance"]:checked')?.value || "",
-          listDirectory: document.querySelector('input[name="listDirectory"]:checked')?.value || "",
-          provideCriminalCheck: document.querySelector('input[name="provideCriminalCheck"]:checked')?.value || "",
-          attendMeetings: document.querySelector('input[name="attendMeetings"]:checked')?.value || "",
-          workRemotely: document.querySelector('input[name="workRemotely"]:checked')?.value || "",
-        }),
-        coreCompetencies: "[]", // Phase J2: read from grid radios
-        referee1Name: document.getElementById("ref1Name")?.value || "",
-        referee1Role: document.getElementById("ref1Role")?.value || "",
-        referee1Email: document.getElementById("ref1Email")?.value || "",
-        referee1Phone: document.getElementById("ref1Phone")?.value || "",
-        referee2Name: document.getElementById("ref2Name")?.value || "",
-        referee2Role: document.getElementById("ref2Role")?.value || "",
-        referee2Email: document.getElementById("ref2Email")?.value || "",
-        referee2Phone: document.getElementById("ref2Phone")?.value || "",
-        declarationAccuracy: document.getElementById("declAccuracy")?.checked ? "TRUE" : "",
-        declarationEthics: document.getElementById("declEthics")?.checked ? "TRUE" : "",
-        declarationScope: document.getElementById("declScope")?.checked ? "TRUE" : "",
-        declarationDoulaServices: document.getElementById("declDoulaServices")?.checked ? "TRUE" : "",
-        declarationInterview: document.getElementById("declInterview")?.checked ? "TRUE" : "",
-        declarationProfessionalDev: document.getElementById("declProfessionalDev")?.checked ? "TRUE" : "",
-        declarationCriminalCheck: document.getElementById("declCriminalCheck")?.checked ? "TRUE" : "",
-        declarationMeetings: document.getElementById("declMeetings")?.checked ? "TRUE" : "",
-        declarationSignedAt: new Date().toISOString(),
-      };
+    const form = document.getElementById("professional-apply-form");
+    if (!form) return;
 
+    try {
+      const fd = new FormData(form);
+      const payload = buildPayload(fd);
       const response = await fetch("/api/professional/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
       if (!response.ok) return;
 
@@ -647,6 +736,12 @@ const token = Astro.url.searchParams.get("token");
       }
     } catch {}
   }
+
+  // Phase J2: expose helpers on window so the module script (form-client
+  // attachAutosaveQueue) can call them with the same payload shape that
+  // saveFormData uses. Both share window.__buildPayload__.
+  window.__buildPayload__ = buildPayload;
+  window.__serializeRepeatable__ = serializeRepeatable;
 
   document.querySelectorAll("[data-next]").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -724,14 +819,13 @@ const token = Astro.url.searchParams.get("token");
 
   function renderDocuments() {
     const uploaded = ensureDocsUploadedStore();
-    const allDocs = [...REQUIRED_DOCS, ...OPTIONAL_DOCS];
     const list = document.getElementById("document-list");
     list.innerHTML = "";
 
     let requiredComplete = 0;
-    allDocs.forEach(doc => {
+    ALL_DOC_TYPES.forEach(doc => {
       const files = uploaded[doc.id] || [];
-      const isRequired = REQUIRED_DOCS.some(d => d.id === doc.id);
+      const isRequired = doc.required;
       const isUploaded = files.length > 0;
       if (isRequired && isUploaded) requiredComplete++;
 
@@ -773,10 +867,12 @@ const token = Astro.url.searchParams.get("token");
 
     document.getElementById("upload-count").textContent = requiredComplete;
     document.getElementById("upload-status-text").textContent =
-      requiredComplete === 6 ? "All required documents uploaded!" : `${6 - requiredComplete} category(ies) remaining`;
+      requiredComplete === REQUIRED_DOC_TYPES.length
+        ? "All required documents uploaded!"
+        : `${REQUIRED_DOC_TYPES.length - requiredComplete} category(ies) remaining`;
 
     const paymentBtn = document.getElementById("proceed-payment-btn");
-    if (requiredComplete === 6) {
+    if (requiredComplete === REQUIRED_DOC_TYPES.length) {
       paymentBtn.disabled = false;
       paymentBtn.textContent = "Proceed to Payment";
       paymentBtn.onclick = goToPayment;

@@ -1,6 +1,18 @@
 import FormData from "form-data";
 import Mailgun from "mailgun.js";
 import { appendEmailLog } from "./google-sheets";
+import { TIERS } from "./forms/tiers";
+
+/**
+ * Phase K: look up tier label from TIERS config by storageValue. O(N) over
+ * the (small) TIERS list — no hardcoded "pm"/"am" branch.
+ */
+function tierLabelFor(storageValue: string): string {
+  for (const t of Object.values(TIERS)) {
+    if (t.storageValue === storageValue) return t.label;
+  }
+  return storageValue;
+}
 
 interface EmailParams {
   to: string;
@@ -294,7 +306,9 @@ ${orgName}`;
 
 export async function sendRenewalAdminNotification(
   toEmail: string,
-  tier: "pm" | "am",
+  /** Phase K: tier widened from "pm"|"am" literal to string so any
+   *  TierConfig.storageValue works. Display label is resolved from TIERS. */
+  tier: string,
   memberName: string,
   memberEmail: string,
   renewalId: string,
@@ -303,7 +317,7 @@ export async function sendRenewalAdminNotification(
 ): Promise<void> {
   const orgName = getOrgName();
   const support = getSupportEmail();
-  const tierLabel = tier === "pm" ? "Professional Member" : "Associate Member";
+  const tierLabel = tierLabelFor(tier);
   const amount = (amountPaidCents / 100).toFixed(2);
   const subject = `Membership renewal completed — ${memberName} (${tierLabel})`;
 

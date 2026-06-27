@@ -14,6 +14,7 @@ import {
 import { appendAssociateApplication } from "../../lib/google-sheets";
 import { logger } from "../../lib/logger";
 import { validateTier } from "../../lib/forms/runtime";
+import { getTier } from "../../lib/forms/tiers";
 
 type CreateSessionPayload = {
   plan?: MembershipPlan;
@@ -209,7 +210,9 @@ export const POST: APIRoute = async ({ request }) => {
           currency: "nzd",
           unit_amount: firstTermAmount,
           product_data: {
-            name: plan === "associate" ? "Associate Membership" : "Professional Membership",
+            // Phase K: tier label resolved via getTier (single source of truth
+            // for "Associate Membership" / "Professional Membership" / future tiers).
+            name: getTier(plan as "associate" | "professional").label,
             description: renewalMessage,
           },
         },
