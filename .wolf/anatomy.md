@@ -33,7 +33,9 @@
 - `pdLog.content.json` — Editable labels for entries + nested entries.dateCompleted/activity/totalHours/provider. (~15 lines, ~100 tok)
 - `pdLog.test.ts` — 6 tests: id, structure, validate-empty, validate-array, minRows, columnMap. (~45 lines, ~350 tok)
 
-## src/pages/renew/
+## src/pages/professional/
+
+- `apply.astro` — Pro application wizard (Phase J1: 1692→1295 lines). Sections 1-7 now Step + FieldRenderer; step 8 (uploads) stays inline for J3. saveFormData is stubbed for J2 (FormData rewrite). (~1295 lines, ~8500 tok)
 
 - `[tier].astro` — Dynamic renewal page. Replaces associate.astro + pro.astro. Loads schema per tier (associate in Phase B, professional in Phase G). Schema serialised to JSON island, mounted by `form-client.ts` module script. (~165 lines, ~1300 tok)
 - (DELETED Phase B) `associate.astro` — Replaced by [tier].astro

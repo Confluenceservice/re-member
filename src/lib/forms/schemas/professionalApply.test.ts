@@ -113,4 +113,13 @@ describe("professionalApply schema", () => {
     expect(required).toHaveLength(6);
     expect(schema.uploads?.docTypes.find((d) => d.id === "insurance")?.required).toBe(false);
   });
+
+  it("declares 8 steps in wizard order (about → training → experience → furtherRequirements → competencies → referees → declarations → uploads)", () => {
+    // Phase J1: Step + FieldRenderer walks steps in declaration order. The
+    // wizard UX assumes this order; reorder breaks the visual flow.
+    expect(schema.steps.map((s) => s.id)).toEqual([
+      "about", "training", "experience", "furtherRequirements",
+      "competencies", "referees", "declarations", "uploads",
+    ]);
+  });
 });

@@ -1,5 +1,8 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Step from "../../lib/forms/render/Step.astro";
+import { schema as professionalApplySchema } from "../../lib/forms/schemas/professionalApply";
+import professionalApplyContent from "../../lib/forms/schemas/professionalApply.content.json";
 
 const token = Astro.url.searchParams.get("token");
 ---
@@ -155,330 +158,23 @@ const token = Astro.url.searchParams.get("token");
     </div>
   </div>
 
-  <!-- Step 1: About You -->
-  <section id="section-1" class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
-    <h2 class="m-0 mb-4 text-xl">About You</h2>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div>
-        <label for="firstName" class="block font-semibold mb-1.5">First name *</label>
-        <input id="firstName" name="firstName" type="text" placeholder="Jane" autocomplete="given-name"
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
+  <!-- Steps 1-7: schema-driven render (Phase J1). Step 8 (uploads) stays
+       inline for now — J3 will wire form-client attachUploadLock + the
+       per-doc-type multi-file UI. Section IDs preserved so the existing
+       showStep() nav works unchanged. -->
+  {professionalApplySchema.steps.slice(0, 7).map((step, i) => (
+    <section id={`section-${i + 1}`} class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
+      <Step step={step} content={professionalApplyContent} values={{}} />
+      <div class="mt-6 flex gap-3 justify-end">
+        {i > 0 && (
+          <button class="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg cursor-pointer" data-goto={i}>Back</button>
+        )}
+        <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl" data-next={i + 2}>
+          {i === 6 ? "Continue to Documents" : "Continue"}
+        </button>
       </div>
-      <div>
-        <label for="lastName" class="block font-semibold mb-1.5">Last name *</label>
-        <input id="lastName" name="lastName" type="text" placeholder="Doe" autocomplete="family-name"
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-      <div>
-        <label for="dateOfBirth" class="block font-semibold mb-1.5">Date of Birth *</label>
-        <input id="dateOfBirth" name="dateOfBirth" type="text" placeholder="DD/MM/YYYY"
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
-      </div>
-      <div>
-        <label for="ethnicity" class="block font-semibold mb-1.5">Ethnicity *</label>
-        <input id="ethnicity" name="ethnicity" type="text" placeholder="e.g. New Zealand European"
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
-      </div>
-    </div>
-
-    <div class="mt-3">
-      <label for="address" class="block font-semibold mb-1.5">Address *</label>
-      <input id="address" name="address" type="text" placeholder="123 Main Street, Auckland, 1010"
-        class="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
-    </div>
-
-    <div class="mt-3">
-      <label for="postalAddress" class="block font-semibold mb-1.5">Postal Address</label>
-      <input id="postalAddress" name="postalAddress" type="text" placeholder="Optional — if different from above"
-        class="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-      <div>
-        <label for="phone" class="block font-semibold mb-1.5">Phone *</label>
-        <input id="phone" name="phone" type="tel" placeholder="+64 21 123 4567" autocomplete="tel"
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
-      </div>
-      <div>
-        <label for="email" class="block font-semibold mb-1.5">Email *</label>
-        <input id="email" name="email" type="email" placeholder="jane@example.com" autocomplete="email"
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-      <div>
-        <label for="businessName" class="block font-semibold mb-1.5">Business Name</label>
-        <input id="businessName" name="businessName" type="text" placeholder="Optional"
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
-      </div>
-      <div>
-        <label for="website" class="block font-semibold mb-1.5">Website / Social</label>
-        <input id="website" name="website" type="text" placeholder="Optional"
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg" />
-      </div>
-    </div>
-
-    <div class="mt-6 flex gap-3 justify-end">
-      <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl" data-next="2">Continue</button>
-    </div>
-  </section>
-
-  <!-- Step 2: Training & Education -->
-  <section id="section-2" class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
-    <h2 class="m-0 mb-4 text-xl">Your Training & Education</h2>
-    <p class="text-gray-600 mb-4 text-sm">
-      List all End of Life Doula courses you have completed. Attach certificates separately in the Document Upload section.
-    </p>
-
-    <div id="courses-list" class="flex flex-col gap-3"></div>
-
-    <button type="button" id="add-course-btn" class="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg mt-3 w-full sm:w-auto">
-      + Add Another Course
-    </button>
-
-    <div class="mt-6 flex gap-3 justify-end">
-      <button class="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg cursor-pointer" data-goto="1">Back</button>
-      <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl" data-next="3">Continue</button>
-    </div>
-  </section>
-
-  <!-- Step 3: EOL Doula Experience -->
-  <section id="section-3" class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
-    <h2 class="m-0 mb-4 text-xl">Your EOL Doula Experience</h2>
-
-    <div id="experience-list" class="flex flex-col gap-3 mb-4"></div>
-    <button type="button" id="add-experience-btn" class="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg w-full sm:w-auto">+ Add Experience</button>
-
-    <h3 class="mt-6 mb-3 text-lg">Example 1 *</h3>
-    <p class="text-gray-600 text-sm mb-3">Describe an example including setting/context, role, skills used, ethical/cultural considerations, and outcome/learning.</p>
-    <textarea id="example1" rows="4" placeholder="Describe your experience..."
-      class="w-full px-4 py-3 border border-gray-200 rounded-xl text-base resize-y"></textarea>
-
-    <h3 class="mt-4 mb-3 text-lg">Example 2</h3>
-    <textarea id="example2" rows="4" placeholder="Optional second example..."
-      class="w-full px-4 py-3 border border-gray-200 rounded-xl text-base resize-y"></textarea>
-
-    <h3 class="mt-4 mb-3 text-lg">Example 3</h3>
-    <textarea id="example3" rows="4" placeholder="Optional third example..."
-      class="w-full px-4 py-3 border border-gray-200 rounded-xl text-base resize-y"></textarea>
-
-    <div class="mt-6 flex gap-3 justify-end">
-      <button class="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg cursor-pointer" data-goto="2">Back</button>
-      <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl" data-next="4">Continue</button>
-    </div>
-  </section>
-
-  <!-- Step 4: Further Requirements -->
-  <section id="section-4" class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
-    <h2 class="m-0 mb-4 text-xl">Further Requirements</h2>
-
-    <div class="flex flex-col gap-3">
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <p class="font-semibold mb-2">Do you agree to actively provide Doula Services? *</p>
-        <div class="flex gap-6">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="agreeDoulaServices" value="YES" /> Yes</label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="agreeDoulaServices" value="NO" /> No</label>
-        </div>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <p class="font-semibold mb-2">Do you agree to an interview by one or more committee members? *</p>
-        <div class="flex gap-6">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="agreeInterview" value="YES" /> Yes</label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="agreeInterview" value="NO" /> No</label>
-        </div>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <p class="font-semibold mb-2">Do you agree to submit proof of up to 10 hours of professional development each year? *</p>
-        <div class="flex gap-6">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="commitProfessionalDev" value="YES" /> Yes</label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="commitProfessionalDev" value="NO" /> No</label>
-        </div>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <p class="font-semibold mb-2">Will you take out professional indemnity insurance? (recommended)</p>
-        <div class="flex gap-6">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="willInsurance" value="YES" /> Yes</label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="willInsurance" value="NO" /> No</label>
-        </div>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <p class="font-semibold mb-2">Do you wish to be listed as a practicing End of Life Doula in our directory? *</p>
-        <div class="flex gap-6">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="listDirectory" value="YES" /> Yes</label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="listDirectory" value="NO" /> No</label>
-        </div>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <p class="font-semibold mb-2">Are you willing to provide a current Ministry of Justice criminal record check? *</p>
-        <p class="text-sm text-gray-600 mb-2">
-          Apply here:
-          <a href="https://www.justice.govt.nz/criminal-records/" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">www.justice.govt.nz/criminal-records/</a>
-        </p>
-        <div class="flex gap-6">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="provideCriminalCheck" value="YES" /> Yes</label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="provideCriminalCheck" value="NO" /> No</label>
-        </div>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <p class="font-semibold mb-2">Are you willing to attend regular Re:Member meetings and events, and engage with and support your local Re:Member community? *</p>
-        <div class="flex gap-6">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="attendMeetings" value="YES" /> Yes</label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="attendMeetings" value="NO" /> No</label>
-        </div>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <p class="font-semibold mb-2">Are you willing to work remotely where there is no other available Professional Member in a Client's area? *</p>
-        <div class="flex gap-6">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="workRemotely" value="YES" /> Yes</label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="workRemotely" value="NO" /> No</label>
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-6 flex gap-3 justify-end">
-      <button class="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg cursor-pointer" data-goto="3">Back</button>
-      <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl" data-next="5">Continue</button>
-    </div>
-  </section>
-
-  <!-- Step 5: Core Competencies -->
-  <section id="section-5" class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
-    <h2 class="m-0 mb-4 text-xl">EOL Doula Standards & Core Competencies</h2>
-    <p class="text-gray-600 mb-4 text-sm">Please tick the competencies you are confident in providing.</p>
-
-    <div id="competencies-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
-
-    <div class="mt-6 flex gap-3 justify-end">
-      <button class="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg cursor-pointer" data-goto="4">Back</button>
-      <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl" data-next="6">Continue</button>
-    </div>
-  </section>
-
-  <!-- Step 6: Referees -->
-  <section id="section-6" class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
-    <h2 class="m-0 mb-4 text-xl">Referees</h2>
-    <p class="text-gray-600 mb-4 text-sm">Please provide two referees who have witnessed your work with the dying, or who have worked alongside you in a related field.</p>
-
-    <h3 class="m-0 mb-3 text-lg">Referee 1 *</h3>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div>
-        <label for="ref1Name" class="block font-semibold mb-1">Full Name *</label>
-        <input id="ref1Name" type="text" placeholder="Full name"
-          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-base" />
-      </div>
-      <div>
-        <label for="ref1Role" class="block font-semibold mb-1">Role / Relationship *</label>
-        <input id="ref1Role" type="text" placeholder="e.g. Nurse, Social Worker"
-          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-base" />
-      </div>
-      <div>
-        <label for="ref1Email" class="block font-semibold mb-1">Email *</label>
-        <input id="ref1Email" type="email" placeholder="referee@example.com"
-          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-base" />
-      </div>
-      <div>
-        <label for="ref1Phone" class="block font-semibold mb-1">Phone *</label>
-        <input id="ref1Phone" type="tel" placeholder="+64 21 123 4567"
-          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-base" />
-      </div>
-    </div>
-
-    <h3 class="mt-6 mb-3 text-lg">Referee 2 *</h3>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div>
-        <label for="ref2Name" class="block font-semibold mb-1">Full Name *</label>
-        <input id="ref2Name" type="text" placeholder="Full name"
-          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-base" />
-      </div>
-      <div>
-        <label for="ref2Role" class="block font-semibold mb-1">Role / Relationship *</label>
-        <input id="ref2Role" type="text" placeholder="e.g. Nurse, Social Worker"
-          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-base" />
-      </div>
-      <div>
-        <label for="ref2Email" class="block font-semibold mb-1">Email *</label>
-        <input id="ref2Email" type="email" placeholder="referee@example.com"
-          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-base" />
-      </div>
-      <div>
-        <label for="ref2Phone" class="block font-semibold mb-1">Phone *</label>
-        <input id="ref2Phone" type="tel" placeholder="+64 21 123 4567"
-          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-base" />
-      </div>
-    </div>
-
-    <div class="mt-6 flex gap-3 justify-end">
-      <button class="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg cursor-pointer" data-goto="5">Back</button>
-      <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl" data-next="7">Continue</button>
-    </div>
-  </section>
-
-  <!-- Step 7: Declarations -->
-  <section id="section-7" class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
-    <h2 class="m-0 mb-4 text-xl">Declarations</h2>
-    <p class="text-gray-600 mb-4 text-sm">Please confirm all statements below to proceed.</p>
-
-    <div class="flex flex-col gap-3">
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <label class="flex items-start gap-2 cursor-pointer">
-          <input type="checkbox" id="declAccuracy" class="mt-1" />
-          <span>I confirm the information provided is accurate and complete. *</span>
-        </label>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <label class="flex items-start gap-2 cursor-pointer">
-          <input type="checkbox" id="declEthics" class="mt-1" />
-          <span>I have read and agree to the Re:Member Code of Ethics. *</span>
-        </label>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <label class="flex items-start gap-2 cursor-pointer">
-          <input type="checkbox" id="declScope" class="mt-1" />
-          <span>I have read and understand the Scope of Practice. *</span>
-        </label>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <label class="flex items-start gap-2 cursor-pointer">
-          <input type="checkbox" id="declDoulaServices" class="mt-1" />
-          <span>I agree to actively provide Doula Services as part of my professional membership. *</span>
-        </label>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <label class="flex items-start gap-2 cursor-pointer">
-          <input type="checkbox" id="declInterview" class="mt-1" />
-          <span>I agree to an interview by the committee if required. *</span>
-        </label>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <label class="flex items-start gap-2 cursor-pointer">
-          <input type="checkbox" id="declProfessionalDev" class="mt-1" />
-          <span>I commit to completing 10 hours of professional development per year. *</span>
-        </label>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <label class="flex items-start gap-2 cursor-pointer">
-          <input type="checkbox" id="declCriminalCheck" class="mt-1" />
-          <span>I agree to provide a Ministry of Justice criminal record check. *</span>
-        </label>
-      </div>
-      <div class="p-3 border border-gray-200 rounded-lg">
-        <label class="flex items-start gap-2 cursor-pointer">
-          <input type="checkbox" id="declMeetings" class="mt-1" />
-          <span>I agree to attend regular Re:Member meetings and support my local community. *</span>
-        </label>
-      </div>
-    </div>
-
-    <div class="mt-6 flex gap-3 justify-end">
-      <button class="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg cursor-pointer" data-goto="6">Back</button>
-      <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl" data-next="8">Continue to Documents</button>
-    </div>
-  </section>
+    </section>
+  ))}
 
   <!-- Step 8: Document Upload -->
   <section id="section-8" class="bg-white border border-gray-200 rounded-xl p-4 mt-4 hidden">
@@ -587,9 +283,9 @@ const token = Astro.url.searchParams.get("token");
 
   let currentStep = 0;
   let applicantId = null;
-  let courses = [];
-  let experiences = [];
-  let competencyStates = {};
+  // Phase J1: courses, experiences, competencyStates state vars deleted —
+  // the form is schema-driven; saveFormData (J2 territory) will read directly
+  // from FormData(form) instead of in-memory state.
   let stepCompletion = {};  // step index -> true if completed
 
   function ensureDocsUploadedStore() {
@@ -804,100 +500,11 @@ const token = Astro.url.searchParams.get("token");
     if (n === 8) renderDocuments();
   }
 
-  function buildCompetencyGrid() {
-    const grid = document.getElementById("competencies-grid");
-    grid.innerHTML = "";
-    COMPETENCIES.forEach((comp, i) => {
-      const item = document.createElement("div");
-      const checked = competencyStates[i];
-      item.className = "px-3 py-2 border rounded-md text-sm " + (checked ? "border-emerald-700 bg-emerald-50" : "border-gray-200");
-      item.innerHTML = `<label class="flex items-center gap-2 cursor-pointer">
-        <input type="checkbox" data-comp="${i}" ${checked ? "checked" : ""} />
-        <span class="leading-snug">
-          <span class="font-semibold">${comp.label}</span>
-          <span class="text-gray-600"> — ${comp.description}</span>
-        </span>
-      </label>`;
-      item.querySelector("input").addEventListener("change", (e) => {
-        competencyStates[i] = e.target.checked;
-        item.className = "px-3 py-2 border rounded-md text-sm " + (e.target.checked ? "border-emerald-700 bg-emerald-50" : "border-gray-200");
-      });
-      grid.appendChild(item);
-    });
-  }
-
-  function addCourseRow(data = {}) {
-    const list = document.getElementById("courses-list");
-    const idx = courses.length;
-    courses.push(data);
-    const row = document.createElement("div");
-    row.className = "p-3 border border-gray-200 rounded-lg bg-gray-50";
-    row.id = `course-${idx}`;
-    row.innerHTML = `
-      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
-        <div>
-          <label class="text-xs font-semibold block mb-1">Course Name *</label>
-          <input type="text" data-course="name" value="${data.name || ""}" placeholder="e.g. EOL Doula Foundation"
-            class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" />
-        </div>
-        <div>
-          <label class="text-xs font-semibold block mb-1">Provider *</label>
-          <input type="text" data-course="provider" value="${data.provider || ""}" placeholder="e.g. Re:Member"
-            class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" />
-        </div>
-        <div>
-          <label class="text-xs font-semibold block mb-1">Year *</label>
-          <input type="text" data-course="year" value="${data.year || ""}" placeholder="2024"
-            class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" />
-        </div>
-        <div class="flex justify-end">
-          <button type="button" class="remove-course px-3 py-2 border border-amber-700 text-amber-800 rounded-md bg-white text-sm font-medium cursor-pointer"
-            data-idx="${idx}">&times;</button>
-        </div>
-      </div>`;
-    row.querySelector(".remove-course").addEventListener("click", () => {
-      courses[idx] = null;
-      row.style.display = "none";
-    });
-    list.appendChild(row);
-  }
-
-  document.getElementById("add-course-btn").addEventListener("click", () => addCourseRow());
-
-  function addExperienceRow(data = {}) {
-    const list = document.getElementById("experience-list");
-    const idx = experiences.length;
-    experiences.push(data);
-    const row = document.createElement("div");
-    row.className = "p-3 border border-gray-200 rounded-lg bg-gray-50";
-    row.id = `exp-${idx}`;
-    row.innerHTML = `
-      <div class="flex flex-col gap-2">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label class="text-xs font-semibold block mb-1">Role / Context *</label>
-            <textarea data-exp="role" rows="2" placeholder="Describe the role or context"
-              class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm resize-y">${data.role || ""}</textarea>
-          </div>
-          <div>
-            <label class="text-xs font-semibold block mb-1">Skills that relate to EOL *</label>
-            <textarea data-exp="skills" rows="2" placeholder="Skills used"
-              class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm resize-y">${data.skills || ""}</textarea>
-          </div>
-        </div>
-        <div class="flex justify-end">
-          <button type="button" class="remove-exp px-3 py-1 border border-amber-700 text-amber-800 rounded bg-white text-xs font-medium cursor-pointer"
-            data-idx="${idx}">Remove</button>
-        </div>
-      </div>`;
-    row.querySelector(".remove-exp").addEventListener("click", () => {
-      experiences[idx] = null;
-      row.style.display = "none";
-    });
-    list.appendChild(row);
-  }
-
-  document.getElementById("add-experience-btn").addEventListener("click", () => addExperienceRow());
+  // Phase J1: buildCompetencyGrid, addCourseRow, addExperienceRow deleted —
+  // their inline HTML is now schema-driven (FieldRenderer handles repeatable
+  // + grid). The addCourseBtn / add-experience-btn / competencies-grid DOM
+  // ids no longer exist; form-client's attachRepeatable handles add/remove
+  // for the schema-driven repeatables instead.
 
   document.getElementById("copy-access-link-btn")?.addEventListener("click", copyAccessLink);
   document.getElementById("resend-access-link-btn")?.addEventListener("click", resendAccessLink);
@@ -987,15 +594,8 @@ const token = Astro.url.searchParams.get("token");
         postalAddress: document.getElementById("postalAddress")?.value || "",
         businessName: document.getElementById("businessName")?.value || "",
         website: document.getElementById("website")?.value || "",
-        qualifications: JSON.stringify(courses.filter(Boolean).map(c => ({
-          name: document.querySelector(`#course-${courses.indexOf(c)} [data-course="name"]`)?.value || c.name,
-          provider: document.querySelector(`#course-${courses.indexOf(c)} [data-course="provider"]`)?.value || c.provider,
-          year: document.querySelector(`#course-${courses.indexOf(c)} [data-course="year"]`)?.value || c.year,
-        }))),
-        experience: JSON.stringify(experiences.filter(Boolean).map(e => ({
-          role: document.querySelector(`#exp-${experiences.indexOf(e)} [data-exp="role"]`)?.value || e.role,
-          skills: document.querySelector(`#exp-${experiences.indexOf(e)} [data-exp="skills"]`)?.value || e.skills,
-        }))),
+        qualifications: "[]", // Phase J2: read from FormData repeatable rows
+        experience: "[]",     // Phase J2: read from FormData repeatable rows
         furtherRequirements: JSON.stringify({
           agreeDoulaServices: document.querySelector('input[name="agreeDoulaServices"]:checked')?.value || "",
           agreeInterview: document.querySelector('input[name="agreeInterview"]:checked')?.value || "",
@@ -1006,7 +606,7 @@ const token = Astro.url.searchParams.get("token");
           attendMeetings: document.querySelector('input[name="attendMeetings"]:checked')?.value || "",
           workRemotely: document.querySelector('input[name="workRemotely"]:checked')?.value || "",
         }),
-        coreCompetencies: JSON.stringify(Object.values(competencyStates)),
+        coreCompetencies: "[]", // Phase J2: read from grid radios
         referee1Name: document.getElementById("ref1Name")?.value || "",
         referee1Role: document.getElementById("ref1Role")?.value || "",
         referee1Email: document.getElementById("ref1Email")?.value || "",
@@ -1638,8 +1238,10 @@ const token = Astro.url.searchParams.get("token");
 
         try {
           const comps = JSON.parse(data.coreCompetencies || "[]");
-          comps.forEach((c, i) => { competencyStates[i] = c; });
-          buildCompetencyGrid();
+          // Phase J1: competencyStates is gone; the schema-driven grid renders
+          // once at page load and the field names (coreCompetencies.{col})
+          // are stable for hydration. J2 will hydrate the grid radios here.
+          void comps;
         } catch {}
 
         if (data.referee1) {
@@ -1687,6 +1289,7 @@ const token = Astro.url.searchParams.get("token");
     ensureDocsUploadedStore();
     document.getElementById("loading-overlay").classList.add("hidden");
     showStep(0);
-    buildCompetencyGrid();
+    // Phase J1: buildCompetencyGrid call removed — grid renders server-side
+    // via Step + FieldRenderer.
   }
 </script>
