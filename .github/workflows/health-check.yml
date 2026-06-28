@@ -20,7 +20,7 @@ jobs:
     # GH token. Without these, the cron fires every 5 min and fails.
     if: ${{ secrets.REMEMBER_HEALTH_CHECK_TOKEN != '' && vars.REMEMBER_HEALTH_ALERT_URL != '' }}
     steps:
-      - name: Trigger itdocsnow-health-alert Worker
+- name: Trigger itdocsnow-health-alert Worker
         run: |
           set -euo pipefail
           # Capture body + HTTP status. Don't use -f: we want to print the body
