@@ -168,6 +168,9 @@ describe("POST /api/advanced/apply — email verification gate", () => {
       expect(res.status).toBe(200);
       expect(json.requiresVerification).toBe(true);
       expect(json.emailSent).toBe(false);
+      // bug-005: the underlying send error must reach the client so the verify
+      // panel can show a diagnostic instead of a swallowed generic message.
+      expect(json.emailError).toBe("smtp down");
       expect(mockCaptureMessage).toHaveBeenCalled();
     });
 

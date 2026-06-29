@@ -58,5 +58,17 @@
     "related_bugs": ["bug-003"],
     "occurrences": 1,
     "last_seen": "2026-06-29T02:00:00Z"
+  },
+  {
+    "id": "bug-006",
+    "timestamp": "2026-06-29T05:20:00Z",
+    "error_message": "Residual /professional/ route literals survived the bug-004 rename fix — broken post-payment Stripe redirect (success_url/cancel_url 404), cancel-page links, and an inaccurate logger route string.",
+    "file": "src/pages/api/advanced/upload-complete.ts, src/pages/advanced/cancel.astro, src/pages/advanced/cancel-upload.astro, src/pages/api/advanced/upload-file.ts",
+    "root_cause": "bug-004's sed only touched apply.astro + two API handlers. It missed Stripe success_url/cancel_url in upload-complete.ts (post-payment 404), the Try again / Continue Application / Start New Application hrefs in cancel.astro + cancel-upload.astro, and the logger child route string in upload-file.ts. The dead professional.astro (meta-refresh to a non-existent /professional/apply/) + its create-professional-checkout.ts endpoint were also still present. Root structural cause: deploy workflows ran NO tests, and .astro string literals had zero coverage, so the whole class was invisible to CI.",
+    "fix": "Repointed all to /advanced/*; deleted professional.astro + create-professional-checkout.ts. Added src/lib/__guards__/stale-paths.test.ts (grep guard + client-to-route contract) so the class fails CI; e2e/apply.spec.ts (Playwright smoke) to catch the 404 + emailError render end-to-end against the real server; E2E_STUB / forcefail-recipient shims in upload-sheet.ts + email-sender.ts to run offline; .github/workflows/test.yml to gate every PR + push on check + test + e2e.",
+    "tags": ["rename", "stale-path", "fetch-404", "resume-link", "testing", "ci", "playwright", "regression-net"],
+    "related_bugs": ["bug-004", "bug-005"],
+    "occurrences": 1,
+    "last_seen": "2026-06-29T05:20:00Z"
   }
 ]
