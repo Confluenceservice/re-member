@@ -9,33 +9,40 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // google-sheets-helpers.test.ts.
 // ---------------------------------------------------------------------------
 
-const sheet: { rows: string[][]; ensured: string[] } = { rows: [], ensured: [] };
+// vi.hoisted: these are referenced from the vi.mock factory below, which is
+// hoisted above normal const initialisation (TDZ otherwise).
+const { sheet, mockEnsureSheetWithHeaders, mockReadRange, mockUpdateRange, mockAppendToRange } =
+  vi.hoisted(() => {
+    const sheet: { rows: string[][]; ensured: string[] } = { rows: [], ensured: [] };
 
-const mockEnsureSheetWithHeaders = vi.fn(async (name: string, _headers: readonly string[]) => {
-  sheet.ensured.push(name);
-});
+    const mockEnsureSheetWithHeaders = vi.fn(async (name: string, _headers: readonly string[]) => {
+      sheet.ensured.push(name);
+    });
 
-const mockReadRange = vi.fn(async (range: string): Promise<string[][]> => {
-  if (/!A2:A$/.test(range)) {
-    return sheet.rows.map((r) => [r[0] ?? ""]);
-  }
-  const m = range.match(/!A(\d+):I\1$/);
-  if (m) {
-    const row = sheet.rows[Number(m[1]) - 2];
-    return row ? [row] : [];
-  }
-  throw new Error(`unexpected readRange in test: ${range}`);
-});
+    const mockReadRange = vi.fn(async (range: string): Promise<string[][]> => {
+      if (/!A2:A$/.test(range)) {
+        return sheet.rows.map((r) => [r[0] ?? ""]);
+      }
+      const m = range.match(/!A(\d+):I\1$/);
+      if (m) {
+        const row = sheet.rows[Number(m[1]) - 2];
+        return row ? [row] : [];
+      }
+      throw new Error(`unexpected readRange in test: ${range}`);
+    });
 
-const mockUpdateRange = vi.fn(async (range: string, values: unknown[][]) => {
-  const m = range.match(/!A(\d+):I\1$/);
-  if (!m) throw new Error(`unexpected updateRange in test: ${range}`);
-  sheet.rows[Number(m[1]) - 2] = values[0] as string[];
-});
+    const mockUpdateRange = vi.fn(async (range: string, values: unknown[][]) => {
+      const m = range.match(/!A(\d+):I\1$/);
+      if (!m) throw new Error(`unexpected updateRange in test: ${range}`);
+      sheet.rows[Number(m[1]) - 2] = values[0] as string[];
+    });
 
-const mockAppendToRange = vi.fn(async (_range: string, row: Array<string | number>) => {
-  sheet.rows.push(row.map(String));
-});
+    const mockAppendToRange = vi.fn(async (_range: string, row: Array<string | number>) => {
+      sheet.rows.push(row.map(String));
+    });
+
+    return { sheet, mockEnsureSheetWithHeaders, mockReadRange, mockUpdateRange, mockAppendToRange };
+  });
 
 vi.mock("./google-sheets-helpers", () => ({
   ensureSheetWithHeaders: mockEnsureSheetWithHeaders,
