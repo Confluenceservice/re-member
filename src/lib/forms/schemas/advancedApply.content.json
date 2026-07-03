@@ -5,16 +5,42 @@
     "about": {
       "title": "About You",
       "fields": {
-        "firstName": { "label": "First name", "placeholder": "Jane" },
-        "lastName": { "label": "Last name", "placeholder": "Doe" },
-        "dateOfBirth": { "label": "Date of Birth", "placeholder": "DD/MM/YYYY" },
-        "ethnicity": { "label": "Ethnicity", "help": "Optional — used for equity reporting" },
-        "address": { "label": "Physical address" },
-        "postalAddress": { "label": "Postal address", "help": "If different from above" },
-        "phone": { "label": "Phone" },
-        "email": { "label": "Email" },
-        "businessName": { "label": "Business name" },
-        "website": { "label": "Website", "placeholder": "https://" }
+        "firstName": {
+          "label": "First name",
+          "placeholder": "Jane"
+        },
+        "lastName": {
+          "label": "Last name",
+          "placeholder": "Doe"
+        },
+        "dateOfBirth": {
+          "label": "Date of Birth",
+          "placeholder": "DD/MM/YYYY"
+        },
+        "ethnicity": {
+          "label": "Ethnicity",
+          "help": "Optional — used for equity reporting"
+        },
+        "address": {
+          "label": "Physical address"
+        },
+        "postalAddress": {
+          "label": "Postal address",
+          "help": "If different from above"
+        },
+        "phone": {
+          "label": "Phone"
+        },
+        "email": {
+          "label": "Email"
+        },
+        "businessName": {
+          "label": "Business name"
+        },
+        "website": {
+          "label": "Website",
+          "placeholder": "https://"
+        }
       }
     },
     "training": {
@@ -24,21 +50,42 @@
           "label": "Qualifications",
           "help": "Add each course or certificate separately."
         },
-        "qualifications.name": { "label": "Course name" },
-        "qualifications.provider": { "label": "Provider" },
-        "qualifications.year": { "label": "Year completed" }
+        "qualifications.name": {
+          "label": "Course name"
+        },
+        "qualifications.provider": {
+          "label": "Provider"
+        },
+        "qualifications.year": {
+          "label": "Year completed"
+        }
       }
     },
     "experience": {
       "title": "Professional Experience",
       "fields": {
-        "rows": { "label": "Experience rows" },
-        "rows.role": { "label": "Role" },
-        "rows.skills": { "label": "Skills" },
-        "rows.description": { "label": "Description" },
-        "example1": { "label": "Example narrative 1", "help": "Describe a meaningful client engagement." },
-        "example2": { "label": "Example narrative 2" },
-        "example3": { "label": "Example narrative 3" }
+        "rows": {
+          "label": "Experience rows"
+        },
+        "rows.role": {
+          "label": "Role"
+        },
+        "rows.skills": {
+          "label": "Skills"
+        },
+        "rows.description": {
+          "label": "Description"
+        },
+        "example1": {
+          "label": "Example narrative 1",
+          "help": "Describe a meaningful client engagement."
+        },
+        "example2": {
+          "label": "Example narrative 2"
+        },
+        "example3": {
+          "label": "Example narrative 3"
+        }
       }
     },
     "furtherRequirements": {
@@ -94,33 +141,78 @@
     "referees": {
       "title": "Referees",
       "fields": {
-        "referees": { "label": "Two referees" },
-        "referee1Name": { "label": "Referee 1 — name" },
-        "referee1Role": { "label": "Referee 1 — role" },
-        "referee1Email": { "label": "Referee 1 — email" },
-        "referee1Phone": { "label": "Referee 1 — phone" },
-        "referee2Name": { "label": "Referee 2 — name" },
-        "referee2Role": { "label": "Referee 2 — role" },
-        "referee2Email": { "label": "Referee 2 — email" },
-        "referee2Phone": { "label": "Referee 2 — phone" }
+        "referees": {
+          "label": "Two referees"
+        },
+        "referee1Name": {
+          "label": "Referee 1 — name"
+        },
+        "referee1Role": {
+          "label": "Referee 1 — role"
+        },
+        "referee1Email": {
+          "label": "Referee 1 — email"
+        },
+        "referee1Phone": {
+          "label": "Referee 1 — phone"
+        },
+        "referee2Name": {
+          "label": "Referee 2 — name"
+        },
+        "referee2Role": {
+          "label": "Referee 2 — role"
+        },
+        "referee2Email": {
+          "label": "Referee 2 — email"
+        },
+        "referee2Phone": {
+          "label": "Referee 2 — phone"
+        }
       }
     },
     "declarations": {
       "title": "Declarations",
       "fields": {
-        "accuracy": { "label": "I confirm that the information I have provided is true and accurate to the best of my knowledge." },
-        "ethics": { "label": "I agree to abide by the Re:Member Code of Ethics and Scope of Practice." },
-        "scope": { "label": "I understand and will work within the Re:Member Scope of Practice." },
-        "doulaServices": { "label": "I agree to actively provide Doula Services." },
-        "interview": { "label": "I agree to an interview by one or more committee members." },
-        "professionalDev": { "label": "I agree to submit proof of up to 10 hours of professional development each year." },
-        "criminalCheck": { "label": "I am willing to provide a current Ministry of Justice criminal record check." },
-        "meetings": { "label": "I am willing to attend regular Re:Member meetings and events, and engage with and support my local Re:Member community." }
+        "accuracy": {
+          "label": "I confirm that the information I have provided is true and accurate to the best of my knowledge."
+        },
+        "ethics": {
+          "label": "I agree to abide by the Re:Member Code of Ethics and Scope of Practice."
+        },
+        "scope": {
+          "label": "I understand and will work within the Re:Member Scope of Practice."
+        },
+        "doulaServices": {
+          "label": "I agree to actively provide Doula Services."
+        },
+        "interview": {
+          "label": "I agree to an interview by one or more committee members."
+        },
+        "professionalDev": {
+          "label": "I agree to submit proof of up to 10 hours of professional development each year."
+        },
+        "criminalCheck": {
+          "label": "I am willing to provide a current Ministry of Justice criminal record check."
+        },
+        "meetings": {
+          "label": "I am willing to attend regular Re:Member meetings and events, and engage with and support my local Re:Member community."
+        }
       }
     },
     "uploads": {
       "title": "Document Upload",
       "fields": {}
+    }
+  },
+  "uploads": {
+    "docTypes": {
+      "training": "Certificates of training",
+      "ethics": "Code of Ethics & Scope of Practice",
+      "criminal": "Ministry of Justice criminal record check",
+      "advance_care": "Advanced Care Planning NZ",
+      "assisted_dying": "Assisted Dying online training",
+      "fundamentals": "Fundamentals of Palliative Care",
+      "insurance": "Professional indemnity insurance"
     }
   }
 }

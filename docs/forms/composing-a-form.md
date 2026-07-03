@@ -30,7 +30,7 @@ Open `yourSchema.ts`. Walk through these decisions in order:
   - `regex(pattern, msg)` — custom regex
   - `conditional(predicate)` — required only when a predicate returns true (e.g. only when another field equals "yes")
 - **Storage.** Set `storage.sheetName` to the tab name (e.g. `"Member Survey Responses"`) and `columnMap` to map each field to a column letter (A, B, C, ...). Empty cells stay managed (set them up in the route, not the schema).
-- **Uploads.** If the form accepts files, list `uploads.docTypes` with `{id, label, required}`.
+- **Uploads.** If the form accepts files, the doc-type ids + labels live in the content JSON under `uploads.docTypes` (`{ "training": "Certificates of training", ... }` — non-devs can rename labels or add types). TS keeps only the validation contract: a `DOC_TYPE_REQUIRED` map marking which ids are optional (unknown ids default to required). See `advancedApply.{ts,content.json}` for the pattern.
 
 ### Don't edit these (engineer-only)
 

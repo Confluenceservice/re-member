@@ -50,6 +50,17 @@ export const COMPETENCY_IDS = Object.keys(
   content.steps.competencies.fields.coreCompetencies.options,
 );
 
+/**
+ * Upload doc types follow the same Phase-L pattern as competencies: the
+ * content JSON's `uploads.docTypes` map owns WHICH doc types exist and
+ * their labels (per-org content, non-dev editable); TS owns only the
+ * validation contract — which of them are required. Unknown ids added in
+ * the JSON default to required (fail-safe for compliance docs).
+ */
+const DOC_TYPE_REQUIRED: Record<string, boolean> = {
+  insurance: false,
+};
+
 export const schema: FormSchema = {
   id: "advancedApply",
   content: {} as FormSchema["content"], // loaded from .content.json
@@ -254,14 +265,10 @@ export const schema: FormSchema = {
     rowFactory: "createApplicantRow",
   },
   uploads: {
-    docTypes: [
-      { id: "training", label: "Certificates of training", required: true },
-      { id: "ethics", label: "Code of Ethics & Scope of Practice", required: true },
-      { id: "criminal", label: "Ministry of Justice criminal record check", required: true },
-      { id: "advance_care", label: "Advanced Care Planning NZ", required: true },
-      { id: "assisted_dying", label: "Assisted Dying online training", required: true },
-      { id: "fundamentals", label: "Fundamentals of Palliative Care", required: true },
-      { id: "insurance", label: "Professional indemnity insurance", required: false },
-    ],
+    docTypes: Object.entries(content.uploads.docTypes).map(([id, label]) => ({
+      id,
+      label,
+      required: DOC_TYPE_REQUIRED[id] ?? true,
+    })),
   },
 };

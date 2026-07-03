@@ -1,6 +1,6 @@
 # Requirements — Form Schema System
 
-> Spec ID: `012` · Type: cross-cutting · Status: backfilled (not yet approved)
+> Spec ID: `012` · Type: cross-cutting · Status: approved & implemented (closed 2026-07-03)
 > Depends on: `000-platform-overview`, `014-tier-abstraction`
 > Referenced by: `001`, `002`, `005`, `006`, plus every future form spec
 
