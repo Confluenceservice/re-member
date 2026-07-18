@@ -134,6 +134,12 @@ export interface GridField extends BaseField {
     type: "checkbox" | "radio" | "text";
     /** Stable column id referenced by id-order serialization (plan finding m2). */
     id?: string;
+    /**
+     * Whether this column must be answered. Defaults to `true`; set `false` for
+     * optional columns (e.g. an insurance question). Drives client step
+     * validation so the page never hardcodes which columns are required.
+     */
+    required?: boolean;
   }>;
 }
 

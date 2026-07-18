@@ -242,8 +242,10 @@ const sigValueIsUrl = /^https?:\/\//i.test(sigValue);
     </table>
   )}
 
-  {/* Stacked / responsive grid: one labeled row per column. Same input
-      name/value as the table layout — only the wrapper markup differs. */}
+  {/* Stacked / responsive grid: one checkbox/radio per row, reusing the
+      standalone checkbox styling (control left, label right) so grids match
+      the Declarations step. Same input name/value as the table layout — only
+      the wrapper markup differs. */}
   {field.type === "grid" && gridLayout !== "table" && (
     <div
       class:list={["field-grid", "field-grid--stacked", gridLayout === "responsive" && "field-grid--responsive"]}
@@ -253,10 +255,7 @@ const sigValueIsUrl = /^https?:\/\//i.test(sigValue);
       aria-label={label}
     >
       {(field as GridField).columns.map((col) => (
-        <div class="field-grid-row">
-          <label class="field-grid-row-label" for={`${inputName}.${col.name}`}>
-            {optionLabels[col.name] ?? col.name}
-          </label>
+        <label class="checkbox-label field-grid-item">
           <input
             type={col.type}
             id={`${inputName}.${col.name}`}
@@ -264,7 +263,8 @@ const sigValueIsUrl = /^https?:\/\//i.test(sigValue);
             value={col.type === "text" ? "" : "true"}
             disabled={isReadonly}
           />
-        </div>
+          <span>{optionLabels[col.name] ?? col.name}</span>
+        </label>
       ))}
     </div>
   )}
