@@ -179,32 +179,24 @@
     @apply w-5 h-5 align-middle;
   }
 
-  /* Stacked layout: one labeled row per column, always vertical. */
+  /* Stacked / responsive grid rows reuse the standalone checkbox styling
+     (control left, label right) so grids match the Declarations step. */
+  .checkbox-label input[type="radio"] {
+    @apply w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500;
+  }
+
   .field-grid--stacked {
-    @apply flex flex-col gap-2 border-0;
+    @apply flex flex-col gap-3 border-0;
   }
 
-  .field-grid--stacked .field-grid-row {
-    @apply flex items-center justify-between gap-3 py-2 border-b border-gray-100;
-  }
-
-  .field-grid--stacked .field-grid-row-label {
-    @apply text-sm text-gray-700;
-  }
-
-  .field-grid--stacked .field-grid-row input[type="text"] {
-    @apply px-3 py-2 border border-gray-200 rounded-lg;
-  }
-
-  /* Responsive: stacked (above) on narrow screens; horizontal cells
-     (label over input) from the `sm` breakpoint up. */
+  /* Responsive: stacked on narrow screens; wrap into columns ≥ sm. */
   @media (min-width: 640px) {
     .field-grid--responsive {
-      @apply flex-row flex-wrap gap-4;
+      @apply flex-row flex-wrap gap-x-6 gap-y-3;
     }
 
-    .field-grid--responsive .field-grid-row {
-      @apply flex-col items-start justify-start gap-1 py-0 border-b-0;
+    .field-grid--responsive .field-grid-item {
+      @apply min-w-[220px];
     }
   }
 }

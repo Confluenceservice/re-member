@@ -159,7 +159,14 @@ export const schema: FormSchema = {
           contentKey: "furtherRequirements.furtherRequirements",
           serialize: "json",
           validators: [required],
-          columns: FURTHER_REQUIREMENT_IDS.map((id) => ({ name: id, type: "radio" as const })),
+          // `willInsurance` is the one optional row ("recommended"); every
+          // other requirement must be answered. Client step validation derives
+          // the required set from these flags — no hardcoded list in the page.
+          columns: FURTHER_REQUIREMENT_IDS.map((id) => ({
+            name: id,
+            type: "radio" as const,
+            required: id !== "willInsurance",
+          })),
         },
       ],
     },

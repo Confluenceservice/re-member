@@ -804,11 +804,12 @@ const token = Astro.url.searchParams.get("token");
     if (n === 1) return true;
     if (n === 2) return true;
     if (n === 4) {
-      // Schema-driven grid (Phase J1): each requirement row is a radio named
+      // Required set is derived from the schema grid columns (required !== false),
+      // not a hardcoded list. Each requirement row posts under
       // furtherRequirements.<col> (value="true" when agreed).
-      const required = ["agreeMemberServices", "agreeInterview", "commitProfessionalDev", "listDirectory", "provideCriminalCheck", "attendMeetings", "workRemotely"];
+      const required = gridColumns("furtherRequirements").filter((c) => c.required !== false);
       for (const col of required) {
-        const el = document.querySelector(`input[name="furtherRequirements.${col}"]`);
+        const el = document.querySelector(`input[name="furtherRequirements.${col.name}"]`);
         if (el && !el.checked) {
           alert("Please answer all required questions.");
           return false;
@@ -853,6 +854,23 @@ const token = Astro.url.searchParams.get("token");
   }
 
   function saveStepData(n) {}
+
+  // Read a grid field's columns straight from the serialized schema island so
+  // the page never hardcodes which columns exist or which are required — the
+  // schema is the single source of truth.
+  function gridColumns(fieldName) {
+    try {
+      const el = document.getElementById("form-schema");
+      const schema = el?.textContent ? JSON.parse(el.textContent) : null;
+      if (!schema) return [];
+      for (const step of schema.steps) {
+        for (const f of step.fields) {
+          if (f.name === fieldName && f.type === "grid") return f.columns || [];
+        }
+      }
+    } catch {}
+    return [];
+  }
 
   // Resume hydration for schema-driven repeatable groups lives in form-client
   // (hydrateRepeatable), exposed on window by mount() — mirrors
@@ -1358,19 +1376,15 @@ const token = Astro.url.searchParams.get("token");
         } catch {}
 
         try {
-          // furtherRequirements renders as a grid of single radios named
-          // furtherRequirements.<col> (value="true"). Stored as a YES/NO map.
+          // furtherRequirements renders as a grid named furtherRequirements.<col>
+          // (value="true"), stored as a YES/NO map. Iterate the schema's grid
+          // columns — no hardcoded column list in the page.
           const fr = JSON.parse(data.furtherRequirements || "{}");
-          const setRequirement = (col) => {
-            if (String(fr[col] || "").toUpperCase() !== "YES") return;
-            const el = document.querySelector(`input[name="furtherRequirements.${col}"]`);
+          gridColumns("furtherRequirements").forEach((col) => {
+            if (String(fr[col.name] || "").toUpperCase() !== "YES") return;
+            const el = document.querySelector(`input[name="furtherRequirements.${col.name}"]`);
             if (el) el.checked = true;
-          };
-          [
-            "agreeMemberServices", "agreeInterview", "commitProfessionalDev",
-            "willInsurance", "listDirectory", "provideCriminalCheck",
-            "attendMeetings", "workRemotely",
-          ].forEach(setRequirement);
+          });
         } catch {}
 
         try {
